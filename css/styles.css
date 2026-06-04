@@ -78,6 +78,9 @@ html.dark .theme-moon { display: inline; }
 .swatch.open { background: var(--open); }
 .swatch.closed { background: var(--closed); }
 
+/* Keep Leaflet's own controls (the layer switcher) clear of the floating top bar */
+.leaflet-top { top: 56px; }
+
 /* Mapy logo control */
 .leaflet-control-mapy-logo img { display: block; height: 30px; }
 

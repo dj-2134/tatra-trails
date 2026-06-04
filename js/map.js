@@ -10,7 +10,8 @@ const TATRAS_CENTER = [49.165, 20.13];
 const TATRAS_ZOOM = 12;
 
 export function initMap(elementId = "map") {
-  const map = L.map(elementId, { zoomControl: true }).setView(TATRAS_CENTER, TATRAS_ZOOM);
+  // No +/- zoom buttons — they crowd the floating chrome; scroll / pinch still zooms.
+  const map = L.map(elementId, { zoomControl: false }).setView(TATRAS_CENTER, TATRAS_ZOOM);
 
   // One Leaflet tile layer per Mapy mapset, keyed by its human label for the switcher.
   const layers = {};
