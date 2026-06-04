@@ -79,7 +79,7 @@ html.dark .theme-moon { display: inline; }
 .swatch.closed { background: var(--closed); }
 
 /* Mapy logo control */
-.leaflet-control-mapy-logo img { display: block; height: 18px; }
+.leaflet-control-mapy-logo img { display: block; height: 30px; }
 
 @media (max-width: 640px) {
   .searchbox { flex-basis: 0; }
