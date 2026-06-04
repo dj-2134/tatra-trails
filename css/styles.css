@@ -1,0 +1,87 @@
+/* ---- Theme variables ---- */
+:root {
+  --bg: #ffffff;
+  --chrome-bg: #ffffff;
+  --chrome-border: #e2e8f0;
+  --text: #1f2937;
+  --muted: #94a3b8;
+  --accent: #15633f;
+  --shadow: 0 2px 8px rgba(0, 0, 0, .10);
+  --open: #15803d;
+  --closed: #dc2626;
+  --radius: 12px;
+}
+html.dark {
+  --bg: #1c2722;
+  --chrome-bg: rgba(15, 23, 20, .82);
+  --chrome-border: rgba(255, 255, 255, .14);
+  --text: #e8f0ec;
+  --muted: #8aa399;
+  --accent: #34d399;
+  --shadow: 0 2px 10px rgba(0, 0, 0, .4);
+  --open: #34d399;
+  --closed: #f87171;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { font-family: system-ui, "Segoe UI", sans-serif; color: var(--text); }
+
+#map { position: fixed; inset: 0; z-index: 0; background: var(--bg); }
+
+/* ---- Top bar (floating) ---- */
+.topbar {
+  position: fixed; top: 12px; left: 12px; right: 12px; z-index: 1000;
+  display: flex; gap: 8px; align-items: center; pointer-events: none;
+}
+.topbar > * { pointer-events: auto; }
+.brand, .searchbox, .chip {
+  background: var(--chrome-bg); border: 1px solid var(--chrome-border);
+  border-radius: 999px; box-shadow: var(--shadow);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+.brand { display: flex; align-items: center; gap: 8px; padding: 8px 14px; font-weight: 700; color: var(--accent); }
+.searchbox { flex: 0 1 320px; padding: 4px; }
+.searchbox input { width: 100%; border: 0; background: transparent; color: var(--text); padding: 6px 10px; font-size: 14px; outline: none; }
+.searchbox input::placeholder { color: var(--muted); }
+.controls { margin-left: auto; display: flex; gap: 8px; }
+.chip { font: inherit; color: var(--text); padding: 8px 12px; cursor: pointer; }
+.chip:hover { border-color: var(--accent); }
+
+/* theme-toggle icon swap */
+.theme-moon { display: none; }
+html.dark .theme-sun { display: none; }
+html.dark .theme-moon { display: inline; }
+
+/* ---- Left panel (floating) ---- */
+.panel {
+  position: fixed; top: 72px; left: 12px; z-index: 1000;
+  width: 220px; display: flex; flex-direction: column; gap: 8px;
+}
+.panel-section {
+  text-align: left; background: var(--chrome-bg); border: 1px solid var(--chrome-border);
+  border-radius: var(--radius); box-shadow: var(--shadow); padding: 10px 12px;
+  cursor: pointer; color: var(--accent); font: inherit; font-weight: 700;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.panel-section small { color: var(--muted); font-weight: 400; }
+
+/* ---- Legend (floating) ---- */
+.legend {
+  position: fixed; bottom: 16px; left: 12px; z-index: 1000;
+  display: flex; gap: 14px; background: var(--chrome-bg);
+  border: 1px solid var(--chrome-border); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 8px 12px;
+}
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.swatch { width: 16px; height: 4px; border-radius: 2px; display: inline-block; }
+.swatch.open { background: var(--open); }
+.swatch.closed { background: var(--closed); }
+
+/* Mapy logo control */
+.leaflet-control-mapy-logo img { display: block; height: 18px; }
+
+@media (max-width: 640px) {
+  .searchbox { flex-basis: 0; }
+  .panel { width: calc(100% - 24px); }
+}

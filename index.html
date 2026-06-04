@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TatraTrails — High Tatras trail conditions</title>
+  <meta name="description" content="English-first trail conditions for the High Tatras: which trails are open or closed right now." />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <!-- Anti-flash: set the theme class before first paint (mirrors js/theme.js). -->
+  <script>
+    (function () {
+      try {
+        var s = localStorage.getItem("tt-theme");
+        var t = (s === "light" || s === "dark")
+          ? s
+          : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        document.documentElement.classList.add(t);
+      } catch (e) { document.documentElement.classList.add("light"); }
+    })();
+  </script>
+</head>
+<body>
+  <div id="map" aria-label="Map of the High Tatras"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">🏔</span>
+      <span class="brand-name" data-i18n="app.title">TatraTrails</span>
+    </div>
+    <div class="searchbox">
+      <input type="search" id="search" disabled
+             data-i18n="search.placeholder" data-i18n-attr="placeholder"
+             placeholder="Search a place or trail…" />
+    </div>
+    <div class="controls">
+      <button id="lang-toggle" class="chip" type="button" aria-label="Toggle language">EN | SK</button>
+      <button id="theme-toggle" class="chip" type="button" aria-label="Toggle theme">
+        <span class="theme-sun" aria-hidden="true">☀</span><span class="theme-moon" aria-hidden="true">🌙</span>
+      </button>
+    </div>
+  </header>
+
+  <aside class="panel" id="panel">
+    <button class="panel-section" type="button">
+      <span data-i18n="panel.popularHikes">Popular hikes</span>
+      <small data-i18n="panel.comingSoon">Coming soon</small>
+    </button>
+    <button class="panel-section" type="button">
+      <span data-i18n="panel.planRoute">Plan a route</span>
+      <small data-i18n="panel.comingSoon">Coming soon</small>
+    </button>
+  </aside>
+
+  <div class="legend">
+    <span class="legend-item"><i class="swatch open" aria-hidden="true"></i><span data-i18n="legend.open">Open</span></span>
+    <span class="legend-item"><i class="swatch closed" aria-hidden="true"></i><span data-i18n="legend.closed">Closed</span></span>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
