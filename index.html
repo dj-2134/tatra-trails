@@ -43,10 +43,9 @@
   </header>
 
   <aside class="panel" id="panel">
-    <button class="panel-section" type="button">
-      <span data-i18n="panel.popularHikes">Popular hikes</span>
-      <small data-i18n="panel.comingSoon">Coming soon</small>
-    </button>
+    <div class="panel-title" data-i18n="panel.popularHikes">Popular hikes</div>
+    <div id="hike-list" class="hike-list" aria-label="Popular hikes"></div>
+    <div id="trail-detail" class="trail-detail" hidden></div>
     <button class="panel-section" type="button">
       <span data-i18n="panel.planRoute">Plan a route</span>
       <small data-i18n="panel.comingSoon">Coming soon</small>
@@ -56,6 +55,7 @@
   <div class="legend">
     <span class="legend-item"><i class="swatch open" aria-hidden="true"></i><span data-i18n="legend.open">Open</span></span>
     <span class="legend-item"><i class="swatch closed" aria-hidden="true"></i><span data-i18n="legend.closed">Closed</span></span>
+    <span class="legend-item"><i class="swatch partial" aria-hidden="true"></i><span data-i18n="legend.partial">Partially closed</span></span>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
