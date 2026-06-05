@@ -25,6 +25,13 @@ function fmtDate(iso) {
   });
 }
 
+// Format a seasonal "MM-DD" as a localized short day/month (year is irrelevant).
+function fmtMMDD(mmdd) {
+  return new Date(`2000-${mmdd}T00:00:00`).toLocaleDateString(lang() === "sk" ? "sk-SK" : "en-GB", {
+    day: "numeric", month: "short",
+  });
+}
+
 export async function initTrails(map) {
   MAP = map;
   let rows;
@@ -44,7 +51,12 @@ export async function initTrails(map) {
 
 function renderError() {
   const list = document.getElementById("hike-list");
-  if (list) list.innerHTML = `<div class="disclaimer">${t(DICT, "error.dataUnavailable", lang())}</div>`;
+  if (!list) return;
+  list.innerHTML = "";
+  const div = document.createElement("div");
+  div.className = "disclaimer";
+  div.textContent = t(DICT, "error.dataUnavailable", lang());
+  list.appendChild(div);
 }
 
 function renderList() {
@@ -109,12 +121,12 @@ function openDetail(slug) {
     const div = document.createElement("div");
     div.className = "closure";
     if (c.kind === "seasonal") {
-      div.textContent = `${t(DICT, "detail.seasonal", L_)}: ${c.from} – ${c.to}`;
+      div.textContent = `${t(DICT, "detail.seasonal", L_)}: ${fmtMMDD(c.from)} – ${fmtMMDD(c.to)}`;
     } else {
       const range = c.to_date ? `${fmtDate(c.from_date)} – ${fmtDate(c.to_date)}` : `${fmtDate(c.from_date)} – ${t(DICT, "detail.ongoing", L_)}`;
       const reason = (L_ === "sk" ? c.reason_sk : c.reason_en) || c.reason_en || "";
       div.textContent = `${range}${reason ? " · " + reason : ""}`;
-      if (c.source) {
+      if (c.source && /^https?:\/\//i.test(c.source)) {
         div.append(" ");
         const a = document.createElement("a");
         a.href = c.source; a.target = "_blank"; a.rel = "noopener";
