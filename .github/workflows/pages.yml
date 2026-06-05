@@ -37,7 +37,7 @@ jobs:
           cat > js/config.js <<EOF
           export const MAPY_API_KEY = "${{ secrets.MAPY_API_KEY }}";
           export const SUPABASE_URL = "${{ secrets.SUPABASE_URL }}";
-          export const SUPABASE_ANON_KEY = "${{ secrets.SUPABASE_ANON_KEY }}";
+          export const SUPABASE_PUBLISHABLE_KEY = "${{ secrets.SUPABASE_PUBLISHABLE_KEY }}";
           EOF
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

@@ -22,15 +22,15 @@ English-first trail-conditions board for the High Tatras. Increment 1 = the map 
 ## Backend (Supabase)
 Hikes and closures live in a free Supabase project (Postgres + auto REST API).
 
-1. Create a free project at https://supabase.com (EU region). Note the Project URL, the
-   **anon** key, and the **service_role** key.
+1. Create a free project at https://supabase.com (EU region). Note the Project URL and the
+   **publishable** key (`sb_publishable_...`).
 2. In Supabase Studio → SQL Editor, run `db/schema.sql` then `db/seed.sql`.
-3. Add your Supabase URL + anon key to `js/config.js` (see `js/config.example.js`).
-   The anon key is read-only via Row-Level Security and safe to ship; the service_role
-   key is never committed or sent to the browser.
+3. Add your Supabase URL + publishable key to `js/config.js` (see `js/config.example.js`).
+   The publishable key is read-only via Row-Level Security and safe to ship; the secret
+   key (`sb_secret_...`) is never committed or sent to the browser.
 
 ### Deploy secrets
-Add repository **Actions secrets** `SUPABASE_URL` and `SUPABASE_ANON_KEY` (alongside
+Add repository **Actions secrets** `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (alongside
 `MAPY_API_KEY`). CI writes them into `js/config.js` at build time. A daily
 `keepalive.yml` workflow pings the API so the free project does not pause.
 

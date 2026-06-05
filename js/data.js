@@ -10,7 +10,9 @@ export async function fetchHikes({ url, key }, fetchImpl = fetch) {
   const base = url.replace(/\/+$/, ""); // tolerate a trailing slash in the configured URL
   const endpoint = `${base}/rest/v1/hikes?select=${encodeURIComponent(SELECT)}`;
   const res = await fetchImpl(endpoint, {
-    headers: { apikey: key, Authorization: `Bearer ${key}` },
+    // Supabase publishable keys must go on the apikey header ONLY; sent as a
+    // Bearer token they are parsed as a JWT and rejected ("Invalid JWT").
+    headers: { apikey: key },
   });
   if (!res.ok) throw new Error(`Supabase request failed: ${res.status}`);
   return res.json();

@@ -1,7 +1,7 @@
 // js/trails.js — DOM/Leaflet orchestration (thin, impure binding around the pure modules).
 import { fetchHikes } from "./data.js";
 import { prepareHikes } from "./hikes.js";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js";
 import { DICT, t } from "./i18n.js";
 
 let MAP = null;
@@ -36,7 +36,7 @@ export async function initTrails(map) {
   MAP = map;
   let rows;
   try {
-    rows = await fetchHikes({ url: SUPABASE_URL, key: SUPABASE_ANON_KEY });
+    rows = await fetchHikes({ url: SUPABASE_URL, key: SUPABASE_PUBLISHABLE_KEY });
   } catch (e) {
     renderError();
     return;

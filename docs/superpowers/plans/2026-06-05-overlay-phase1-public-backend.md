@@ -19,7 +19,7 @@
 These are account/dashboard steps the engineer performs once; no code.
 
 - [ ] Create a free Supabase account and a new project (region: EU, e.g. Frankfurt). Note the **Project URL** (`https://<ref>.supabase.co`), the **anon public key**, and the **service_role key**.
-- [ ] In the GitHub repo: **Settings → Secrets and variables → Actions**, add repository secrets `SUPABASE_URL` and `SUPABASE_ANON_KEY` (the `MAPY_API_KEY` secret already exists). The service_role key is **not** stored here and never ships to the browser.
+- [ ] In the GitHub repo: **Settings → Secrets and variables → Actions**, add repository secrets `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (the `MAPY_API_KEY` secret already exists). The service_role key is **not** stored here and never ships to the browser.
 
 ---
 
@@ -707,7 +707,7 @@ export const MAPY_API_KEY = "YOUR_MAPY_API_KEY";
 // Supabase project URL and the PUBLIC anon key. The anon key is safe to ship:
 // Row-Level Security makes it read-only. NEVER put the service_role key here.
 export const SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co";
-export const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+export const SUPABASE_PUBLISHABLE_KEY = "YOUR_SUPABASE_PUBLISHABLE_KEY";
 ```
 
 - [ ] **Step 2: Update the CI "inject config" step in `.github/workflows/pages.yml`**
@@ -719,7 +719,7 @@ Replace the `Inject Mapy API key from secret` step with:
           cat > js/config.js <<EOF
           export const MAPY_API_KEY = "${{ secrets.MAPY_API_KEY }}";
           export const SUPABASE_URL = "${{ secrets.SUPABASE_URL }}";
-          export const SUPABASE_ANON_KEY = "${{ secrets.SUPABASE_ANON_KEY }}";
+          export const SUPABASE_PUBLISHABLE_KEY = "${{ secrets.SUPABASE_PUBLISHABLE_KEY }}";
           EOF
 ```
 
@@ -799,7 +799,7 @@ Depends on: Tasks 1–10 and a seeded Supabase project + a local `js/config.js`.
 // js/trails.js — DOM/Leaflet orchestration (thin, impure binding around the pure modules).
 import { fetchHikes } from "./data.js";
 import { prepareHikes } from "./hikes.js";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js";
 import { DICT, t } from "./i18n.js";
 
 let MAP = null;
@@ -827,7 +827,7 @@ export async function initTrails(map) {
   MAP = map;
   let rows;
   try {
-    rows = await fetchHikes({ url: SUPABASE_URL, key: SUPABASE_ANON_KEY });
+    rows = await fetchHikes({ url: SUPABASE_URL, key: SUPABASE_PUBLISHABLE_KEY });
   } catch (e) {
     renderError();
     return;
@@ -1007,8 +1007,8 @@ jobs:
       - name: Ping the Supabase REST API
         run: |
           curl -fsS "${{ secrets.SUPABASE_URL }}/rest/v1/hikes?select=id&limit=1" \
-            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" > /dev/null
+            -H "apikey: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" > /dev/null
           echo "Supabase pinged OK"
 ```
 
@@ -1050,7 +1050,7 @@ Hikes and closures live in a free Supabase project (Postgres + auto REST API).
    key is never committed or sent to the browser.
 
 ### Deploy secrets
-Add repository **Actions secrets** `SUPABASE_URL` and `SUPABASE_ANON_KEY` (alongside
+Add repository **Actions secrets** `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (alongside
 `MAPY_API_KEY`). CI writes them into `js/config.js` at build time. A daily
 `keepalive.yml` workflow pings the API so the free project does not pause.
 ```

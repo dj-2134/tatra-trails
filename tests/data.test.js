@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fetchHikes } from "../js/data.js";
 
-test("fetchHikes hits PostgREST with the anon key and returns parsed rows", async () => {
+test("fetchHikes hits PostgREST with the publishable key and returns parsed rows", async () => {
   let captured;
   const stub = async (url, opts) => {
     captured = { url, opts };
@@ -14,7 +14,7 @@ test("fetchHikes hits PostgREST with the anon key and returns parsed rows", asyn
   assert.match(captured.url, /^https:\/\/p\.supabase\.co\/rest\/v1\/hikes\?select=/);
   assert.match(decodeURIComponent(captured.url), /closures\(/);
   assert.equal(captured.opts.headers.apikey, "KEY");
-  assert.equal(captured.opts.headers.Authorization, "Bearer KEY");
+  assert.equal(captured.opts.headers.Authorization, undefined); // publishable key: apikey header only
 });
 
 test("fetchHikes strips a trailing slash from the base url", async () => {

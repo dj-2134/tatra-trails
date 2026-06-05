@@ -12,6 +12,5 @@ jobs:
       - name: Ping the Supabase REST API
         run: |
           curl -fsS "${{ secrets.SUPABASE_URL }}/rest/v1/hikes?select=id&limit=1" \
-            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" > /dev/null
+            -H "apikey: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" > /dev/null
           echo "Supabase pinged OK"
