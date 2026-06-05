@@ -37,6 +37,15 @@ test("adhocActive: inclusive range, and null to_date means ongoing", () => {
   assert.equal(adhocActive({ from_date: "2026-06-01", to_date: null }, "2026-06-05"), true);
 });
 
+test("adhocActive: a missing/null from_date is never active", () => {
+  assert.equal(adhocActive({ from_date: null, to_date: null }, "2026-06-05"), false);
+  assert.equal(adhocActive({}, "2026-06-05"), false);
+});
+
+test("adhocActive: a missing to_date is treated as ongoing", () => {
+  assert.equal(adhocActive({ from_date: "2026-06-01" }, "2026-06-05"), true);
+});
+
 test("computeStatus: no rules -> open", () => {
   assert.equal(computeStatus(null, [], today).status, "open");
 });

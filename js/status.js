@@ -14,6 +14,7 @@ export function seasonalActive(seasonal, todayMMDD) {
 }
 
 // closure: { from_date:"YYYY-MM-DD", to_date:"YYYY-MM-DD"|null } ; todayISO: "YYYY-MM-DD"
+// A null OR missing to_date means the closure is ongoing (open-ended) — `== null` matches both.
 export function adhocActive(closure, todayISO) {
   if (!closure || !closure.from_date) return false;
   if (todayISO < closure.from_date) return false;

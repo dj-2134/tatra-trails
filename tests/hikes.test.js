@@ -20,11 +20,13 @@ const rows = [
     closures: [],
   },
   { slug: "broken", name_en: "No geom", name_sk: "x", geometry: null, closures: [] },
+  { name_en: "No slug", name_sk: "x", geometry: { type: "LineString", coordinates: [[20, 49]] }, closures: [] },
 ];
 
 test("prepareHikes maps rows, computes status, and skips rows without geometry", () => {
   const out = prepareHikes(rows, today);
   assert.equal(out.length, 2);
+  assert.ok(out.every((h) => h.slug), "every returned hike has a slug");
   const loop = out.find((h) => h.slug === "loop");
   const high = out.find((h) => h.slug === "high");
   assert.equal(loop.status, "open");

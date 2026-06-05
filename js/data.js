@@ -7,7 +7,8 @@ const SELECT =
 
 // config: { url, key } ; fetchImpl defaults to the global fetch (browser).
 export async function fetchHikes({ url, key }, fetchImpl = fetch) {
-  const endpoint = `${url}/rest/v1/hikes?select=${encodeURIComponent(SELECT)}`;
+  const base = url.replace(/\/+$/, ""); // tolerate a trailing slash in the configured URL
+  const endpoint = `${base}/rest/v1/hikes?select=${encodeURIComponent(SELECT)}`;
   const res = await fetchImpl(endpoint, {
     headers: { apikey: key, Authorization: `Bearer ${key}` },
   });

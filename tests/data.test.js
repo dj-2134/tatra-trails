@@ -17,6 +17,14 @@ test("fetchHikes hits PostgREST with the anon key and returns parsed rows", asyn
   assert.equal(captured.opts.headers.Authorization, "Bearer KEY");
 });
 
+test("fetchHikes strips a trailing slash from the base url", async () => {
+  let captured;
+  const stub = async (url) => { captured = url; return { ok: true, status: 200, json: async () => [] }; };
+  await fetchHikes({ url: "https://p.supabase.co/", key: "K" }, stub);
+  assert.match(captured, /^https:\/\/p\.supabase\.co\/rest\/v1\/hikes\?/);
+  assert.ok(!captured.includes(".co//rest"), "no double slash");
+});
+
 test("fetchHikes throws on a non-ok response", async () => {
   const stub = async () => ({ ok: false, status: 503, json: async () => ({}) });
   await assert.rejects(() => fetchHikes({ url: "u", key: "k" }, stub), /503/);
