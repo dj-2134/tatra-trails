@@ -9,7 +9,7 @@
   --shadow: 0 2px 8px rgba(0, 0, 0, .10);
   --open: #15803d;
   --closed: #dc2626;
-  --partial: #d97706;
+  --partial: #b45309;
   --radius: 12px;
 }
 html.dark {
@@ -114,6 +114,8 @@ html.dark .theme-moon { display: inline; }
 .status-badge.open { background: var(--open); }
 .status-badge.closed { background: var(--closed); }
 .status-badge.partial { background: var(--partial); }
+/* Dark theme's status palette is light (it's tuned for strokes), so badges need dark text for legible contrast. */
+html.dark .status-badge { color: #16231d; }
 
 .trail-detail {
   background: var(--chrome-bg); border: 1px solid var(--chrome-border);
