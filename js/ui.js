@@ -50,15 +50,20 @@ function applyLang(lang) {
     else el.textContent = value;
   });
 }
+function emitLangChange(lang) {
+  document.dispatchEvent(new CustomEvent("tt:langchange", { detail: lang }));
+}
 function initLang() {
   let lang = readStoredLang();
   applyLang(lang);
+  emitLangChange(lang);
   const btn = document.getElementById("lang-toggle");
   if (btn) {
     btn.addEventListener("click", () => {
       lang = nextLang(lang);
       applyLang(lang);
       try { localStorage.setItem(LANG_KEY, lang); } catch { /* ignore */ }
+      emitLangChange(lang);
     });
   }
 }
