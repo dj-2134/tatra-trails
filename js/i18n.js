@@ -13,6 +13,23 @@ export const DICT = {
   "panel.comingSoon": { en: "Coming soon", sk: "Už čoskoro" },
   "legend.open": { en: "Open", sk: "Otvorené" },
   "legend.closed": { en: "Closed", sk: "Zatvorené" },
+  "legend.partial": { en: "Partially closed", sk: "Čiastočne uzavreté" },
+  "status.open": { en: "Open", sk: "Otvorené" },
+  "status.closed": { en: "Closed", sk: "Zatvorené" },
+  "status.partial": { en: "Partially closed", sk: "Čiastočne uzavreté" },
+  "detail.back": { en: "← Back", sk: "← Späť" },
+  "detail.seasonal": { en: "Seasonal closure", sk: "Sezónna uzávera" },
+  "detail.ongoing": { en: "ongoing", sk: "trvá" },
+  "detail.source": { en: "Source", sk: "Zdroj" },
+  "detail.note": { en: "Note", sk: "Poznámka" },
+  "detail.disclaimer": {
+    en: "Awareness only. Always verify with TANAP / mountain rescue (HZS) before you go; the absence of a closure here is not a guarantee a trail is open or safe.",
+    sk: "Len pre informáciu. Pred túrou si vždy overte stav u TANAP / Horskej záchrannej služby (HZS); chýbajúca uzávera tu neznamená, že chodník je otvorený alebo bezpečný.",
+  },
+  "error.dataUnavailable": {
+    en: "Trail data is unavailable right now.",
+    sk: "Údaje o chodníkoch nie sú momentálne dostupné.",
+  },
 };
 
 // Look up a key in `lang`; fall back to English, then to the key itself.
