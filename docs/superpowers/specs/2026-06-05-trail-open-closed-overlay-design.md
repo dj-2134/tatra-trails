@@ -181,8 +181,13 @@ ongoing (`null`); ad-hoc overriding a seasonally-open hike; precedence; no rules
   from any browser anywhere, **zero build**. Good enough to operate day one.
 - **Fast-follow custom admin** (small static page behind Supabase Auth): a friendlier form —
   hike dropdown, date pickers, EN/SK fields, partial toggle, source — for quick closure entry.
-- **Geometry import workflow:** a small, repeatable step (OSM export / GPX → GeoJSON LineString
-  → the `hikes.geometry` column) to add or fix a route. Not drawn in-browser.
+- **GPX upload → geometry (Phase 2):** the admin page accepts a **`.gpx` file**, parses its track
+  to a GeoJSON `LineString` in-browser, and writes it to the selected hike's `geometry` column
+  (authenticated). This is how the founder **fixes/refines route shapes to 100%** without SQL —
+  the chosen path now that routing is only an approximation (see §10). Replaces the manual
+  OSM/BRouter step for accuracy.
+- **Geometry sourcing:** new/rough routes can still be seeded via OSM/BRouter
+  (`scripts/build-geometry.mjs`), but accurate geometry comes from GPX through the admin upload.
 
 ---
 
@@ -254,7 +259,8 @@ of this increment.
   via the API; Popular-hikes list + status badges + clean-map + route-on-select + partial legend;
   keep-alive cron; `status.js`/`prepareHikes` tests.
 - **Phase 2 — Admin & growth:** Supabase Auth + write RLS for the admin; the thin custom admin
-  form; documented geometry-import workflow; expand the hike dataset.
+  form (hikes + closures); **GPX upload → geometry** so routes can be fixed to 100% from the UI
+  (parse `.gpx` → GeoJSON LineString → `hikes.geometry`); expand the hike dataset.
 
 ---
 

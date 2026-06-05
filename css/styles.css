@@ -93,7 +93,14 @@ html.dark .theme-moon { display: inline; }
 }
 
 /* ---- Popular hikes list + detail (inside .panel) ---- */
-.panel-title { font-weight: 700; color: var(--accent); padding: 0 2px 2px; }
+.panel-title {
+  background: var(--chrome-bg); border: 1px solid var(--chrome-border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 8px 12px; font-weight: 700; color: var(--accent);
+}
+/* The `hidden` attribute must win over the `display:flex` rules below — otherwise
+   an empty styled box shows (and the list won't hide when a detail opens). */
+.hike-list[hidden], .trail-detail[hidden] { display: none; }
 .hike-list {
   background: var(--chrome-bg); border: 1px solid var(--chrome-border);
   border-radius: var(--radius); box-shadow: var(--shadow);
