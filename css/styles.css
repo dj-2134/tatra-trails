@@ -9,6 +9,7 @@
   --shadow: 0 2px 8px rgba(0, 0, 0, .10);
   --open: #15803d;
   --closed: #dc2626;
+  --partial: #d97706;
   --radius: 12px;
 }
 html.dark {
@@ -21,6 +22,7 @@ html.dark {
   --shadow: 0 2px 10px rgba(0, 0, 0, .4);
   --open: #34d399;
   --closed: #f87171;
+  --partial: #fbbf24;
 }
 
 * { box-sizing: border-box; }
@@ -77,6 +79,7 @@ html.dark .theme-moon { display: inline; }
 .swatch { width: 16px; height: 4px; border-radius: 2px; display: inline-block; }
 .swatch.open { background: var(--open); }
 .swatch.closed { background: var(--closed); }
+.swatch.partial { background: var(--partial); }
 
 /* Keep Leaflet's own controls (the layer switcher) clear of the floating top bar */
 .leaflet-top { top: 56px; }
@@ -88,3 +91,46 @@ html.dark .theme-moon { display: inline; }
   .searchbox { flex-basis: 0; }
   .panel { width: calc(100% - 24px); }
 }
+
+/* ---- Popular hikes list + detail (inside .panel) ---- */
+.panel-title { font-weight: 700; color: var(--accent); padding: 0 2px 2px; }
+.hike-list {
+  background: var(--chrome-bg); border: 1px solid var(--chrome-border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column;
+}
+.hike-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 9px 12px; border: 0; background: transparent; cursor: pointer;
+  font: inherit; color: var(--text); text-align: left; width: 100%;
+  border-bottom: 1px solid var(--chrome-border);
+}
+.hike-row:last-child { border-bottom: 0; }
+.hike-row:hover { color: var(--accent); }
+.status-badge {
+  flex: none; font-size: 11px; font-weight: 700; color: #fff;
+  padding: 2px 8px; border-radius: 999px; white-space: nowrap;
+}
+.status-badge.open { background: var(--open); }
+.status-badge.closed { background: var(--closed); }
+.status-badge.partial { background: var(--partial); }
+
+.trail-detail {
+  background: var(--chrome-bg); border: 1px solid var(--chrome-border);
+  border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.trail-detail h2 { margin: 0; font-size: 15px; color: var(--accent); }
+.trail-detail .closure { font-size: 13px; }
+.trail-detail .note { font-size: 13px; color: var(--text); }
+.trail-detail a { color: var(--accent); }
+.detail-back {
+  align-self: flex-start; border: 0; background: transparent; color: var(--accent);
+  font: inherit; cursor: pointer; padding: 0;
+}
+.disclaimer { font-size: 11px; color: var(--muted); line-height: 1.35; }
+
+/* ---- Drawn route colors (CSS overrides Leaflet's stroke presentation attr) ---- */
+path.trail--open { stroke: var(--open); }
+path.trail--closed { stroke: var(--closed); }
+path.trail--partial { stroke: var(--partial); }
