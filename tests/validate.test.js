@@ -46,3 +46,21 @@ test("validateClosure rejects to_date before from_date", () => {
 test("validateClosure accepts an ongoing closure (no to_date)", () => {
   assert.deepEqual(validateClosure({ from_date: "2026-06-01", reason_en: "x", reason_sk: "y" }), []);
 });
+
+test("validateHike treats whitespace-only required fields as empty", () => {
+  const errs = validateHike({ slug: "x", name_en: "   ", name_sk: "  ", geometry: goodGeom });
+  assert.ok(errs.some((e) => /English name/.test(e)));
+  assert.ok(errs.some((e) => /Slovak name/.test(e)));
+});
+
+test("validateClosure treats whitespace-only reasons as empty and rejects a malformed to_date", () => {
+  const errs = validateClosure({ from_date: "2026-06-01", to_date: "nope", reason_en: " ", reason_sk: " " });
+  assert.ok(errs.some((e) => /English reason/.test(e)));
+  assert.ok(errs.some((e) => /Slovak reason/.test(e)));
+  assert.ok(errs.some((e) => /end date must be YYYY-MM-DD/.test(e)));
+});
+
+test("validators tolerate null/undefined input without throwing", () => {
+  assert.ok(validateHike(null).length > 0);
+  assert.ok(validateClosure(undefined).length > 0);
+});
