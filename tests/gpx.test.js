@@ -1,7 +1,7 @@
 // tests/gpx.test.js
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { gpxToLineString } from "../js/admin/gpx.js";
+import { gpxToLineString, gpxStats } from "../js/admin/gpx.js";
 
 const TRK = `<?xml version="1.0"?>
 <gpx><trk><trkseg>
@@ -55,4 +55,22 @@ test("clamps maxPoints below 2 to a valid 2-point LineString (no undefined)", ()
 test("parses single-quoted lat/lon attributes", () => {
   const ls = gpxToLineString(`<gpx><trk><trkseg><trkpt lat='49.0' lon='20.0'/><trkpt lat='49.1' lon='20.1'/></trkseg></trk></gpx>`);
   assert.deepEqual(ls.coordinates, [[20.0, 49.0], [20.1, 49.1]]);
+});
+
+test("gpxStats: distance + ascent from a track that has <ele> children", () => {
+  const gpx = `<gpx><trk><trkseg>
+    <trkpt lat="49.0" lon="20.0"><ele>1000</ele></trkpt>
+    <trkpt lat="49.0" lon="20.01"><ele>1100</ele></trkpt>
+    <trkpt lat="49.0" lon="20.02"><ele>1050</ele></trkpt>
+  </trkseg></trk></gpx>`;
+  const { distanceM, ascentM } = gpxStats(gpx);
+  assert.ok(distanceM > 1000 && distanceM < 2000, `distance ${distanceM}`);
+  assert.equal(ascentM, 100); // +100 then -50 → ascent 100
+});
+
+test("gpxStats: ascent is null when the track has no elevation", () => {
+  const gpx = `<gpx><trk><trkseg><trkpt lat="49.0" lon="20.0"/><trkpt lat="49.0" lon="20.01"/></trkseg></trk></gpx>`;
+  const { distanceM, ascentM } = gpxStats(gpx);
+  assert.ok(distanceM > 0);
+  assert.equal(ascentM, null);
 });
