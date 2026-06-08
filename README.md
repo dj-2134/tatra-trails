@@ -40,6 +40,28 @@ Set a repository **Actions secret** `MAPY_API_KEY` (Settings → Secrets and var
 and enable Pages (Settings → Pages → Source: GitHub Actions). The workflow writes `js/config.js`
 from the secret at build time, so the real key is never committed.
 
+## Admin (Phase 2)
+
+A login-gated `admin.html` lets the founder manage hikes, closures and route geometry
+without SQL. It deploys with the site (same Pages workflow) at `/admin.html`.
+
+### One-time setup
+1. **Disable public sign-ups** and **create the founder user**: Supabase → Authentication
+   → turn *"Allow new users to sign up"* off; then Users → add the founder's email.
+2. **Lock writes to that account:** copy the founder's user id (Authentication → Users),
+   paste it into both placeholders in `db/admin-rls.sql`, and run the script in the SQL Editor.
+3. **Allow the magic-link redirects:** Authentication → URL Configuration → Redirect URLs,
+   add `http://localhost:8000/admin.html` and `https://<your-pages-domain>/admin.html`.
+
+### Use
+Open `/admin.html`, enter the founder email, click the magic link in your inbox, then
+create/edit hikes. **Upload GPX** to set/fix a route (`hikes.geometry`); the editor shows a
+live Open/Closed/Partial badge as you edit. The public board reads the same tables, so
+changes appear there immediately.
+
+> The admin loads `supabase-js` from an ESM CDN (admin page only); the public site stays
+> dependency-free. Writes carry the session JWT and are RLS-scoped to the founder's uid.
+
 ## Attribution
 Map tiles © Seznam.cz a.s. and others (Mapy.com). Later increments add trail data from
 OpenStreetMap (© OpenStreetMap contributors, ODbL) and closure rules from TANAP (tanap.org).
