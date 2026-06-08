@@ -29,12 +29,16 @@ A **metric ⇄ imperial** toggle (metric default) controls the public display un
 - Admin editor: three stat fields + a **live map preview** of the route (reusing the public map).
 - Public display: stats in the detail panel and as a compact line per hike-list row.
 - A **units toggle** (metric/imperial) on the public site, persisted in `localStorage`.
+- Remove the non-functional **"Plan a route — coming soon"** placeholder from the panel (A already edits
+  this panel / `index.html`), along with its now-unused i18n keys.
 
 **Out of scope (later increments / YAGNI):**
 - Grouping/categorising the list by distance, and **collapsible list rows / category sections**
   (**Increment B** — collapsibility is built with the list overhaul, so it's designed once; in A the
   rows simply show a compact stat line and the list stays scrollable, with full stats one tap away in the
   detail panel).
+- **Hike-name search / suggestions** (wiring up the currently-disabled search box) — **Increment B**,
+  designed against the new (grouped) list rather than today's flat one.
 - Regions (**Increment C**).
 - Visibility / public-friends-owner access control (**Increment D**).
 - Imperial **input** in the admin (admin entry stays metric).
@@ -175,7 +179,8 @@ A pure, units-aware, language-neutral formatter `js/stats-format.js`:
 - `js/trails.js` — render stats (detail + list) via `stats-format` + current units; listen for
   `tt:unitchange`; draw routes via `routeLayer`.
 - `js/i18n.js` — label keys (§6.5).
-- `index.html` + `js/ui.js` — add and wire the units toggle chip.
+- `index.html` + `js/ui.js` — add and wire the units toggle chip; **remove the dead "Plan a route —
+  coming soon" `.panel-section`** (and drop its `panel.planRoute`/`panel.comingSoon` keys from `js/i18n.js`).
 - `admin.html` — load Leaflet, add `#admin-map` + the three stat fields.
 - `js/admin/ui.js` — init/redraw the map preview; pre-fill stats on upload (`gpxStats` +
   `estimateDurationMin`); load/save the fields with unit conversions.
