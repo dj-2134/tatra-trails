@@ -109,6 +109,15 @@ html.dark .theme-moon { display: inline; }
 .hike-row-stats { font-size: 12px; color: var(--muted); }
 .detail-stats { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; }
 .detail-stat strong { color: var(--muted); font-weight: 600; }
+.hike-group { border-bottom: 1px solid var(--chrome-border); }
+.hike-group:last-child { border-bottom: 0; }
+.hike-group > summary {
+  list-style: none; cursor: pointer; padding: 9px 12px; font-weight: 700;
+  color: var(--accent); font-size: 13px; display: flex; align-items: center; gap: 6px;
+}
+.hike-group > summary::-webkit-details-marker { display: none; }
+.hike-group > summary::before { content: "▸"; font-size: 11px; transition: transform .15s; }
+.hike-group[open] > summary::before { transform: rotate(90deg); }
 .hike-row:last-child { border-bottom: 0; }
 .hike-row:hover { color: var(--accent); }
 .status-badge {

@@ -5,6 +5,7 @@ import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js";
 import { DICT, t } from "./i18n.js";
 import { routeLayer } from "./route-layer.js";
 import { formatDistance, formatAscent, formatDuration } from "./stats-format.js";
+import { BANDS, bandForDistance, formatBandRange } from "./bands.js";
 
 let MAP = null;
 let HIKES = [];
@@ -80,32 +81,48 @@ function renderList() {
   const list = document.getElementById("hike-list");
   if (!list) return;
   list.innerHTML = "";
-  for (const hike of HIKES) {
-    const row = document.createElement("button");
-    row.type = "button";
-    row.className = "hike-row";
-
-    const top = document.createElement("span");
-    top.className = "hike-row-top";
-    const name = document.createElement("span");
-    name.textContent = hike.name[lang()] || hike.name.en;
-    const badge = document.createElement("span");
-    badge.className = `status-badge ${hike.status}`;
-    badge.textContent = t(DICT, `status.${hike.status}`, lang());
-    top.append(name, badge);
-    row.appendChild(top);
-
-    const parts = statParts(hike);
-    if (parts.length) {
-      const stats = document.createElement("span");
-      stats.className = "hike-row-stats";
-      stats.textContent = parts.join(" · ");
-      row.appendChild(stats);
-    }
-
-    row.addEventListener("click", () => select(hike.slug));
-    list.appendChild(row);
+  const u = units();
+  for (const band of BANDS) {
+    const inBand = HIKES.filter((h) => bandForDistance(h.distance_m) === band.key);
+    if (!inBand.length) continue;
+    const group = document.createElement("details");
+    group.className = "hike-group";
+    group.dataset.band = band.key;
+    const summary = document.createElement("summary");
+    summary.textContent =
+      `${t(DICT, `band.${band.key}`, lang())} · ${formatBandRange(band, u)} · ${inBand.length}`;
+    group.appendChild(summary);
+    for (const hike of inBand) group.appendChild(renderRow(hike));
+    list.appendChild(group);
   }
+}
+
+function renderRow(hike) {
+  const row = document.createElement("button");
+  row.type = "button";
+  row.className = "hike-row";
+  row.dataset.slug = hike.slug;
+
+  const top = document.createElement("span");
+  top.className = "hike-row-top";
+  const name = document.createElement("span");
+  name.textContent = hike.name[lang()] || hike.name.en;
+  const badge = document.createElement("span");
+  badge.className = `status-badge ${hike.status}`;
+  badge.textContent = t(DICT, `status.${hike.status}`, lang());
+  top.append(name, badge);
+  row.appendChild(top);
+
+  const parts = statParts(hike);
+  if (parts.length) {
+    const stats = document.createElement("span");
+    stats.className = "hike-row-stats";
+    stats.textContent = parts.join(" · ");
+    row.appendChild(stats);
+  }
+
+  row.addEventListener("click", () => select(hike.slug));
+  return row;
 }
 
 function select(slug) {
