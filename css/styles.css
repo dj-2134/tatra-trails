@@ -197,3 +197,19 @@ body.admin [hidden] { display: none !important; }
 .admin-stats { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
 .admin-hm { display: inline-flex; align-items: center; gap: 4px; }
 .admin-hm input { width: 56px; }
+
+.searchbox { position: relative; }
+.search-suggestions {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 1100;
+  background: var(--chrome-bg); border: 1px solid var(--chrome-border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  max-height: 60vh; overflow-y: auto;
+}
+.search-item {
+  display: flex; flex-direction: column; gap: 2px; width: 100%; text-align: left;
+  padding: 8px 12px; border: 0; background: transparent; cursor: pointer;
+  font: inherit; color: var(--text); border-bottom: 1px solid var(--chrome-border);
+}
+.search-item:last-child { border-bottom: 0; }
+.search-item:hover { color: var(--accent); }
+.search-empty { padding: 8px 12px; font-size: 13px; color: var(--muted); }

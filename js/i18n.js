@@ -35,6 +35,7 @@ export const DICT = {
     en: "Trail data is unavailable right now.",
     sk: "Údaje o chodníkoch nie sú momentálne dostupné.",
   },
+  "search.noMatches": { en: "No matches", sk: "Žiadne výsledky" },
 };
 
 // Look up a key in `lang`; fall back to English, then to the key itself.

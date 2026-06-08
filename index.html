@@ -30,9 +30,10 @@
       <span class="brand-name" data-i18n="app.title">TatraTrails</span>
     </div>
     <div class="searchbox">
-      <input type="search" id="search" disabled
+      <input type="search" id="search" autocomplete="off"
              data-i18n="search.placeholder" data-i18n-attr="placeholder"
              placeholder="Search a place or trail…" />
+      <div id="search-suggestions" class="search-suggestions" hidden></div>
     </div>
     <div class="controls">
       <button id="lang-toggle" class="chip" type="button" aria-label="Toggle language">EN | SK</button>

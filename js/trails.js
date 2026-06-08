@@ -6,6 +6,7 @@ import { DICT, t } from "./i18n.js";
 import { routeLayer } from "./route-layer.js";
 import { formatDistance, formatAscent, formatDuration } from "./stats-format.js";
 import { BANDS, bandForDistance, formatBandRange } from "./bands.js";
+import { searchHikes } from "./search.js";
 
 let MAP = null;
 let HIKES = [];
@@ -57,6 +58,7 @@ export async function initTrails(map) {
   }
   HIKES = prepareHikes(rows, todayInBratislava());
   renderList();
+  initSearch();
   document.addEventListener("tt:langchange", () => {
     renderList();
     if (SELECTED) openDetail(SELECTED);
@@ -64,6 +66,72 @@ export async function initTrails(map) {
   document.addEventListener("tt:unitchange", () => {
     renderList();
     if (SELECTED) openDetail(SELECTED);
+  });
+}
+
+function initSearch() {
+  const input = document.getElementById("search");
+  const box = document.getElementById("search-suggestions");
+  if (!input || !box) return;
+  let matches = [];
+
+  const close = () => { box.hidden = true; box.innerHTML = ""; };
+
+  function pick(slug) {
+    select(slug);
+    input.value = "";
+    close();
+  }
+
+  function render() {
+    const q = input.value;
+    box.innerHTML = "";
+    if (!q.trim()) { close(); return; }
+    matches = searchHikes(HIKES, q).slice(0, 8);
+    if (!matches.length) {
+      const empty = document.createElement("div");
+      empty.className = "search-empty";
+      empty.textContent = t(DICT, "search.noMatches", lang());
+      box.appendChild(empty);
+      box.hidden = false;
+      return;
+    }
+    for (const hike of matches) {
+      const item = document.createElement("button");
+      item.type = "button";
+      item.className = "search-item";
+
+      const top = document.createElement("span");
+      top.className = "hike-row-top";
+      const name = document.createElement("span");
+      name.textContent = hike.name[lang()] || hike.name.en;
+      const badge = document.createElement("span");
+      badge.className = `status-badge ${hike.status}`;
+      badge.textContent = t(DICT, `status.${hike.status}`, lang());
+      top.append(name, badge);
+      item.appendChild(top);
+
+      const parts = statParts(hike);
+      if (parts.length) {
+        const stats = document.createElement("span");
+        stats.className = "hike-row-stats";
+        stats.textContent = parts.join(" · ");
+        item.appendChild(stats);
+      }
+
+      item.addEventListener("click", () => pick(hike.slug));
+      box.appendChild(item);
+    }
+    box.hidden = false;
+  }
+
+  input.addEventListener("input", render);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && matches.length) { e.preventDefault(); pick(matches[0].slug); }
+    else if (e.key === "Escape") { close(); }
+  });
+  document.addEventListener("click", (e) => {
+    if (!box.contains(e.target) && e.target !== input) close();
   });
 }
 
