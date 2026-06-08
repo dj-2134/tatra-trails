@@ -64,3 +64,11 @@ test("validators tolerate null/undefined input without throwing", () => {
   assert.ok(validateHike(null).length > 0);
   assert.ok(validateClosure(undefined).length > 0);
 });
+
+test("validateHike: stats are optional, reject negatives", () => {
+  const base = { slug: "x", name_en: "A", name_sk: "B", geometry: goodGeom };
+  assert.deepEqual(validateHike({ ...base, distance_m: 12300, ascent_m: 540, duration_min: 210 }), []);
+  assert.deepEqual(validateHike(base), []); // all absent is fine
+  assert.ok(validateHike({ ...base, distance_m: -5 }).some((e) => /Distance/.test(e)));
+  assert.ok(validateHike({ ...base, ascent_m: -1 }).some((e) => /Elevation gain/.test(e)));
+});

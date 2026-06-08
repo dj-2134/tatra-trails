@@ -27,6 +27,12 @@ export function validateHike(hike) {
   if (!g || g.type !== "LineString" || !Array.isArray(g.coordinates) || g.coordinates.length < 2) {
     errs.push("A route is required — upload a GPX file.");
   }
+  for (const [key, label] of [["distance_m", "Distance"], ["ascent_m", "Elevation gain"], ["duration_min", "Walking time"]]) {
+    const v = h[key];
+    if (v != null && (!Number.isFinite(Number(v)) || Number(v) < 0)) {
+      errs.push(`${label} must be a non-negative number.`);
+    }
+  }
   return errs;
 }
 

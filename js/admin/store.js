@@ -8,6 +8,7 @@ export async function listHikes() {
     .from("hikes")
     .select(
       "id,slug,name_en,name_sk,geometry,seasonal_from,seasonal_to,seasonal_partial,note_en,note_sk,ref," +
+        "distance_m,ascent_m,duration_min," +
         "closures(id,from_date,to_date,partial,reason_en,reason_sk,source)"
     )
     .order("name_en");
