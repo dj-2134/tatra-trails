@@ -9,15 +9,16 @@ function pointTags(gpxText) {
   return gpxText.match(/<rtept\b[^>]*>/gi) || [];
 }
 
-// Read one attribute out of a single tag string (order-independent).
+// Read one attribute out of a single tag string (order-independent; accepts ' or ").
 function attr(tag, name) {
-  const m = tag.match(new RegExp(`\\b${name}\\s*=\\s*"([^"]*)"`, "i"));
+  const m = tag.match(new RegExp(`\\b${name}\\s*=\\s*["']([^"']*)["']`, "i"));
   return m ? m[1] : null;
 }
 
 // Evenly sample down to exactly maxPoints, endpoints always included.
 function decimate(coords, maxPoints) {
   const n = coords.length;
+  if (maxPoints < 2) maxPoints = 2; // a LineString needs >= 2 points; avoids /0 below
   if (n <= maxPoints) return coords;
   const out = [];
   for (let k = 0; k < maxPoints; k++) {

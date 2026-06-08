@@ -44,3 +44,15 @@ test("throws when fewer than 2 points are found", () => {
   assert.throws(() => gpxToLineString("<gpx></gpx>"), /fewer than 2/);
   assert.throws(() => gpxToLineString(`<gpx><trkpt lat="49" lon="20"/></gpx>`), /fewer than 2/);
 });
+
+test("clamps maxPoints below 2 to a valid 2-point LineString (no undefined)", () => {
+  const ls = gpxToLineString(TRK, { maxPoints: 1 });
+  assert.equal(ls.coordinates.length, 2);
+  assert.deepEqual(ls.coordinates[0], [20.06, 49.10]);
+  assert.deepEqual(ls.coordinates[1], [20.08, 49.12]);
+});
+
+test("parses single-quoted lat/lon attributes", () => {
+  const ls = gpxToLineString(`<gpx><trk><trkseg><trkpt lat='49.0' lon='20.0'/><trkpt lat='49.1' lon='20.1'/></trkseg></trk></gpx>`);
+  assert.deepEqual(ls.coordinates, [[20.0, 49.0], [20.1, 49.1]]);
+});
