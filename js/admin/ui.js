@@ -18,7 +18,10 @@ function today() {
 }
 
 // ---- view switching ----
-function showLogin() { $("login-view").hidden = false; $("admin-view").hidden = true; $("sign-out").hidden = true; }
+function showLogin() {
+  $("login-view").hidden = false; $("admin-view").hidden = true; $("sign-out").hidden = true;
+  $("admin-hike-list").innerHTML = ""; $("editor-pane").hidden = true; // drop any signed-in content
+}
 function showAdmin() { $("login-view").hidden = true; $("admin-view").hidden = false; $("sign-out").hidden = false; }
 
 // ---- left pane ----
