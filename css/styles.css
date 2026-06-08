@@ -81,8 +81,9 @@ html.dark .theme-moon { display: inline; }
 .leaflet-control-mapy-logo img { display: block; height: 30px; }
 
 @media (max-width: 640px) {
-  .searchbox { flex-basis: 0; }
-  .panel { width: calc(100% - 24px); }
+  .topbar { flex-wrap: wrap; }
+  .searchbox { flex: 1 1 100%; order: 1; }
+  .panel { width: calc(100% - 24px); top: 108px; }
 }
 
 /* ---- Popular hikes list + detail (inside .panel) ---- */
