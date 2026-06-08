@@ -5,9 +5,15 @@ import { listHikes, upsertHike, deleteHike, upsertClosure, deleteClosure } from 
 import { gpxToLineString } from "./gpx.js";
 import { validateHike, validateClosure } from "./validate.js";
 import { computeStatus } from "../status.js";
+import { initMap } from "../map.js";
+import { routeLayer } from "../route-layer.js";
+import { gpxStats } from "./gpx.js";
+import { estimateDurationMin } from "../stats.js";
 
 let HIKES = [];
 let state = null; // editor state: { id, isNew, geometry, closures:[{...,_deleted?}] }
+let ADMIN_MAP = null;
+let ADMIN_ROUTE = null;
 
 const $ = (id) => document.getElementById(id);
 
@@ -50,7 +56,8 @@ function markSelected(slug) {
 function blankHike() {
   return { id: null, isNew: true, slug: "", name_en: "", name_sk: "",
     seasonal_from: "", seasonal_to: "", seasonal_partial: false,
-    note_en: "", note_sk: "", ref: "", geometry: null, closures: [] };
+    note_en: "", note_sk: "", ref: "", geometry: null, closures: [],
+    distance_m: null, ascent_m: null, duration_min: null };
 }
 
 function loadEditor(h) {
@@ -73,6 +80,12 @@ function loadEditor(h) {
   $("editor-msg").textContent = "";
   renderClosures();
   updateBadge();
+  $("f-distance").value = h.distance_m != null ? (h.distance_m / 1000).toFixed(1) : "";
+  $("f-ascent").value = h.ascent_m != null ? h.ascent_m : "";
+  setDurationFields(h.duration_min ?? null);
+  $("f-stats-hint").textContent = "";
+  ensureMap();
+  drawAdminRoute(h.geometry);
 }
 
 function newHike() { loadEditor(blankHike()); markSelected(null); }
@@ -86,6 +99,7 @@ function editHike(row) {
     note_en: row.note_en || "", note_sk: row.note_sk || "", ref: row.ref || "",
     geometry: row.geometry || null,
     closures: (row.closures || []).map((c) => ({ ...c })),
+    distance_m: row.distance_m ?? null, ascent_m: row.ascent_m ?? null, duration_min: row.duration_min ?? null,
   });
 }
 
@@ -102,6 +116,9 @@ function formToHike() {
     note_sk: $("f-note-sk").value.trim() || null,
     ref: $("f-ref").value.trim() || null,
     geometry: state.geometry,
+    distance_m: numOrNull($("f-distance").value) != null ? Math.round(numOrNull($("f-distance").value) * 1000) : null,
+    ascent_m: numOrNull($("f-ascent").value) != null ? Math.round(numOrNull($("f-ascent").value)) : null,
+    duration_min: durationFromFields(),
     updated_at: new Date().toISOString(),
   };
 }
@@ -156,15 +173,60 @@ function updateBadge() {
   badge.textContent = status;
 }
 
+// ---- map preview ----
+function ensureMap() {
+  if (!ADMIN_MAP) ADMIN_MAP = initMap("admin-map");
+  ADMIN_MAP.invalidateSize(); // the editor pane was hidden until now
+}
+
+// Current Open/Closed/Partial from the live form (same inputs the badge uses), for route colour.
+function currentStatus() {
+  const from = $("f-seasonal-from").value.trim();
+  const to = $("f-seasonal-to").value.trim();
+  const seasonal = from && to ? { from, to, partial: $("f-seasonal-partial").checked } : null;
+  const adhoc = state.closures.filter((c) => !c._deleted)
+    .map((c) => ({ from_date: c.from_date || null, to_date: c.to_date || null, partial: !!c.partial }));
+  return computeStatus(seasonal, adhoc, today()).status;
+}
+
+function drawAdminRoute(geometry) {
+  if (ADMIN_ROUTE) { ADMIN_MAP.removeLayer(ADMIN_ROUTE); ADMIN_ROUTE = null; }
+  if (!geometry || !Array.isArray(geometry.coordinates) || geometry.coordinates.length < 2) return;
+  ADMIN_ROUTE = routeLayer(geometry, currentStatus()).addTo(ADMIN_MAP);
+  const b = ADMIN_ROUTE.getBounds();
+  if (b.isValid()) ADMIN_MAP.fitBounds(b, { padding: [30, 30] });
+}
+
+// ---- stat-field helpers ----
+function setDurationFields(min) {
+  if (min == null) { $("f-dur-h").value = ""; $("f-dur-min").value = ""; return; }
+  $("f-dur-h").value = Math.floor(min / 60);
+  $("f-dur-min").value = Math.round(min % 60);
+}
+function durationFromFields() {
+  const h = parseInt($("f-dur-h").value, 10);
+  const m = parseInt($("f-dur-min").value, 10);
+  if (!Number.isFinite(h) && !Number.isFinite(m)) return null;
+  return (Number.isFinite(h) ? h : 0) * 60 + (Number.isFinite(m) ? m : 0);
+}
+function numOrNull(v) { const n = parseFloat(v); return Number.isFinite(n) ? n : null; }
+
 // ---- GPX upload ----
 async function onGpxChange(e) {
   const file = e.target.files && e.target.files[0];
   if (!file) return;
   try {
-    state.geometry = gpxToLineString(await file.text());
+    const text = await file.text();
+    state.geometry = gpxToLineString(text);
+    const { distanceM, ascentM } = gpxStats(text);
+    $("f-distance").value = (distanceM / 1000).toFixed(1);
+    $("f-ascent").value = ascentM != null ? ascentM : "";
+    setDurationFields(estimateDurationMin(distanceM, ascentM));
     $("f-geom-status").textContent = `✓ ${state.geometry.coordinates.length} points`;
+    $("f-stats-hint").textContent = "auto-filled from GPX — edit if needed";
+    drawAdminRoute(state.geometry);
   } catch (err) {
-    $("f-geom-status").textContent = `GPX error: ${err.message}`; // geometry unchanged
+    $("f-geom-status").textContent = `GPX error: ${err.message}`; // geometry + fields unchanged
   }
 }
 
