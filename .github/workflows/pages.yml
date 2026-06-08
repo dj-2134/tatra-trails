@@ -14,6 +14,11 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+# The GitHub Pages actions below (configure-pages/upload-pages-artifact/deploy-pages) still
+# ship on the deprecated Node 20 runtime; opt them into Node 24 to clear the warning.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   test:
     runs-on: ubuntu-latest

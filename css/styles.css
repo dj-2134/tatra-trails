@@ -139,14 +139,15 @@ html.dark .status-badge { color: #16231d; }
 }
 .disclaimer { font-size: 11px; color: var(--muted); line-height: 1.35; }
 
-/* ---- Drawn route: a contrasting casing under a thick colored line so the selected
-   trail stands out from the map tiles (CSS overrides Leaflet's stroke attribute) ---- */
-path.trail-casing { stroke: #ffffff; }
+/* ---- Drawn route: a solid white/dark casing under a thick, brightly-coloured DASHED line
+   so the selected trail stands out from the map tiles (CSS overrides Leaflet's stroke attr).
+   Route stroke colours are deliberately brighter/more saturated than the muted UI palette
+   (--open/--closed/--partial), which stays in use for the badges and legend. ---- */
+path.trail-casing { stroke: #ffffff; filter: drop-shadow(0 0 2px rgba(0, 0, 0, .55)); }
 html.dark path.trail-casing { stroke: #0f1714; }
-path.trail--open, path.trail--closed, path.trail--partial { filter: drop-shadow(0 0 1.5px rgba(0, 0, 0, .55)); }
-path.trail--open { stroke: var(--open); }
-path.trail--closed { stroke: var(--closed); }
-path.trail--partial { stroke: var(--partial); }
+path.trail--open { stroke: #00c853; }
+path.trail--closed { stroke: #ff1744; }
+path.trail--partial { stroke: #ff9100; }
 
 /* ---- Admin page (admin.html only) ---- */
 body.admin { height: auto; min-height: 100%; background: var(--bg); }
