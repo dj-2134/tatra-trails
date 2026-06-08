@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TatraTrails — Admin</title>
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <!-- Anti-flash: set the theme class before first paint (mirrors js/theme.js). -->
+  <script>
+    (function () {
+      try {
+        var s = localStorage.getItem("tt-theme");
+        var t = (s === "light" || s === "dark")
+          ? s
+          : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        document.documentElement.classList.add(t);
+      } catch (e) { document.documentElement.classList.add("light"); }
+    })();
+  </script>
+</head>
+<body class="admin">
+  <header class="admin-bar">
+    <span class="brand-name">🏔 TatraTrails — Admin</span>
+    <button id="sign-out" class="chip" type="button" hidden>Sign out</button>
+  </header>
+
+  <!-- Login view (no session) -->
+  <section id="login-view" class="admin-login" hidden>
+    <h1>Admin sign in</h1>
+    <p>Enter the founder email to receive a magic link.</p>
+    <form id="login-form">
+      <input id="login-email" type="email" required placeholder="you@example.com" autocomplete="email" />
+      <button type="submit" class="chip">Send magic link</button>
+    </form>
+    <p id="login-msg" class="admin-msg" role="status"></p>
+  </section>
+
+  <!-- Admin view (signed in) -->
+  <main id="admin-view" class="admin-grid" hidden>
+    <aside class="admin-list-pane">
+      <button id="new-hike" class="chip" type="button">+ New hike</button>
+      <div id="admin-hike-list" class="admin-hike-list" aria-label="Hikes"></div>
+    </aside>
+
+    <section id="editor-pane" class="admin-editor" hidden>
+      <div class="admin-editor-head">
+        <h2 id="editor-title">New hike</h2>
+        <span id="editor-status" class="status-badge open">open</span>
+      </div>
+
+      <form id="hike-form" class="admin-form">
+        <label>Slug <input id="f-slug" required /></label>
+        <label>Name (EN) <input id="f-name-en" required /></label>
+        <label>Name (SK) <input id="f-name-sk" required /></label>
+        <fieldset class="admin-seasonal">
+          <legend>Seasonal closure (optional)</legend>
+          <label>From (MM-DD) <input id="f-seasonal-from" placeholder="11-01" /></label>
+          <label>To (MM-DD) <input id="f-seasonal-to" placeholder="06-15" /></label>
+          <label class="admin-check"><input id="f-seasonal-partial" type="checkbox" /> Partial</label>
+        </fieldset>
+        <label>Note (EN) <textarea id="f-note-en" rows="2"></textarea></label>
+        <label>Note (SK) <textarea id="f-note-sk" rows="2"></textarea></label>
+        <label>Ref <input id="f-ref" placeholder="tanap.org/…" /></label>
+        <div class="admin-geom">
+          <label>Route (GPX) <input id="f-gpx" type="file" accept=".gpx" /></label>
+          <span id="f-geom-status" class="admin-msg"></span>
+        </div>
+      </form>
+
+      <section class="admin-closures">
+        <h3>Ad-hoc closures</h3>
+        <div id="closure-list"></div>
+        <button id="add-closure" class="chip" type="button">+ Add closure</button>
+      </section>
+
+      <div class="admin-actions">
+        <button id="save-hike" class="chip" type="button">Save</button>
+        <button id="delete-hike" class="chip admin-danger" type="button" hidden>Delete hike</button>
+        <span id="editor-msg" class="admin-msg" role="status"></span>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/admin/ui.js"></script>
+</body>
+</html>

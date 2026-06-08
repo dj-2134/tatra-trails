@@ -143,3 +143,38 @@ html.dark .status-badge { color: #16231d; }
 path.trail--open { stroke: var(--open); }
 path.trail--closed { stroke: var(--closed); }
 path.trail--partial { stroke: var(--partial); }
+
+/* ---- Admin page (admin.html only) ---- */
+body.admin { height: auto; min-height: 100%; background: var(--bg); }
+.admin-bar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--chrome-border); }
+.admin-bar .brand-name { font-weight: 700; color: var(--accent); }
+.admin-bar #sign-out { margin-left: auto; }
+
+.admin-login { max-width: 380px; margin: 12vh auto; padding: 0 16px; text-align: center; }
+.admin-login form { display: flex; gap: 8px; margin-top: 12px; }
+.admin-login input { flex: 1; padding: 8px 10px; border: 1px solid var(--chrome-border); border-radius: 999px; background: var(--bg); color: var(--text); font: inherit; }
+
+.admin-grid { display: grid; grid-template-columns: 240px 1fr; gap: 16px; padding: 16px; align-items: start; }
+.admin-list-pane { display: flex; flex-direction: column; gap: 8px; }
+.admin-hike-list { display: flex; flex-direction: column; border: 1px solid var(--chrome-border); border-radius: var(--radius); overflow: hidden; }
+.admin-hike-row { text-align: left; padding: 9px 12px; border: 0; border-bottom: 1px solid var(--chrome-border); background: transparent; color: var(--text); cursor: pointer; font: inherit; }
+.admin-hike-row:last-child { border-bottom: 0; }
+.admin-hike-row:hover { color: var(--accent); }
+.admin-hike-row.selected { color: var(--accent); font-weight: 700; }
+
+.admin-editor { border: 1px solid var(--chrome-border); border-radius: var(--radius); padding: 16px; max-width: 680px; }
+.admin-editor-head { display: flex; align-items: center; justify-content: space-between; }
+.admin-form { display: flex; flex-direction: column; gap: 10px; margin: 12px 0; }
+.admin-form > label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+.admin-form input, .admin-form textarea { padding: 7px 9px; border: 1px solid var(--chrome-border); border-radius: 8px; background: var(--bg); color: var(--text); font: inherit; }
+.admin-form input:disabled { opacity: .6; cursor: not-allowed; }
+.admin-seasonal { display: flex; gap: 12px; align-items: flex-end; border: 1px solid var(--chrome-border); border-radius: 8px; padding: 8px 10px; }
+.admin-check { flex-direction: row !important; align-items: center; gap: 6px; }
+
+.admin-closures h3 { margin: 8px 0; }
+.admin-closure { display: grid; grid-template-columns: repeat(6, 1fr) auto; gap: 6px; align-items: center; border: 1px solid var(--chrome-border); border-radius: 8px; padding: 8px; margin-bottom: 8px; }
+.admin-closure input { padding: 6px 8px; border: 1px solid var(--chrome-border); border-radius: 6px; background: var(--bg); color: var(--text); font: inherit; }
+
+.admin-actions { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.admin-danger { color: var(--closed); border-color: var(--closed); }
+.admin-msg { font-size: 13px; color: var(--muted); }

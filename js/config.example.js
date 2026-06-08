@@ -8,3 +8,4 @@ export const MAPY_API_KEY = "YOUR_MAPY_API_KEY";
 // Row-Level Security keeps it read-only. NEVER put the SECRET key (sb_secret_...) here.
 export const SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co";
 export const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_YOUR_KEY";
+// The admin page (admin.html) reuses these same SUPABASE_URL + publishable key values.
