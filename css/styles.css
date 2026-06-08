@@ -14,7 +14,7 @@
 }
 html.dark {
   --bg: #1c2722;
-  --chrome-bg: rgba(15, 23, 20, .82);
+  --chrome-bg: rgba(15, 23, 20, .94);
   --chrome-border: rgba(255, 255, 255, .14);
   --text: #e8f0ec;
   --muted: #8aa399;
@@ -40,6 +40,12 @@ body { font-family: system-ui, "Segoe UI", sans-serif; color: var(--text); }
 .brand, .searchbox, .chip {
   background: var(--chrome-bg); border: 1px solid var(--chrome-border);
   border-radius: 999px; box-shadow: var(--shadow);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+/* Frost the floating panels too (matching the topbar chips). In dark mode the chrome is
+   translucent, so without this the map bleeds through and overlapping panels look muddy;
+   in light mode the chrome is solid white, so the blur is a harmless no-op. */
+.panel-title, .hike-list, .trail-detail, .search-suggestions, .legend {
   -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
 }
 .brand { display: flex; align-items: center; gap: 8px; padding: 8px 14px; font-weight: 700; color: var(--accent); }
@@ -203,7 +209,11 @@ body.admin [hidden] { display: none !important; }
 .search-suggestions {
   position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 1100;
   background: var(--chrome-bg); border: 1px solid var(--chrome-border);
-  border-radius: var(--radius); box-shadow: var(--shadow);
+  border-radius: var(--radius);
+  /* A stronger, lifted shadow than the shared --shadow so the dropdown clearly floats as its
+     own surface — otherwise (esp. light mode) its edges vanish against the map and it blends
+     into the search box. */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .22);
   max-height: 60vh; overflow-y: auto;
 }
 .search-item {
