@@ -31,7 +31,10 @@ A **metric ⇄ imperial** toggle (metric default) controls the public display un
 - A **units toggle** (metric/imperial) on the public site, persisted in `localStorage`.
 
 **Out of scope (later increments / YAGNI):**
-- Grouping/categorising the list by distance (**Increment B**).
+- Grouping/categorising the list by distance, and **collapsible list rows / category sections**
+  (**Increment B** — collapsibility is built with the list overhaul, so it's designed once; in A the
+  rows simply show a compact stat line and the list stays scrollable, with full stats one tap away in the
+  detail panel).
 - Regions (**Increment C**).
 - Visibility / public-friends-owner access control (**Increment D**).
 - Imperial **input** in the admin (admin entry stays metric).
