@@ -42,3 +42,16 @@ test("prepareHikes tolerates null/empty input", () => {
   assert.deepEqual(prepareHikes(null, today), []);
   assert.deepEqual(prepareHikes([], today), []);
 });
+
+test("prepareHikes: maps stat fields and falls back to geometry distance", () => {
+  const geom = { type: "LineString", coordinates: [[20, 49], [20, 50]] }; // ~111 km
+  const [a, b] = prepareHikes([
+    { slug: "a", name_en: "A", name_sk: "A", geometry: geom, ascent_m: 540, duration_min: 210 },
+    { slug: "b", name_en: "B", name_sk: "B", geometry: geom, distance_m: 5000 },
+  ], today);
+  assert.ok(Math.abs(a.distance_m - 111195) < 1000, `fallback ${a.distance_m}`);
+  assert.equal(a.ascent_m, 540);
+  assert.equal(a.duration_min, 210);
+  assert.equal(b.distance_m, 5000); // an explicit value wins over the fallback
+  assert.equal(b.ascent_m, null);
+});

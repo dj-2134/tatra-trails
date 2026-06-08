@@ -1,6 +1,7 @@
 // js/hikes.js
 // Pure mapping from Supabase API rows to render-ready hikes (with computed status).
 import { computeStatus } from "./status.js";
+import { lineDistanceMeters } from "./stats.js";
 
 function prepareHike(row, today) {
   const seasonal = row.seasonal_from && row.seasonal_to
@@ -8,6 +9,11 @@ function prepareHike(row, today) {
     : null;
   const { status, activeClosures } = computeStatus(seasonal, row.closures || [], today);
   const note = row.note_en || row.note_sk ? { en: row.note_en || "", sk: row.note_sk || "" } : null;
+  const distance_m = row.distance_m != null
+    ? row.distance_m
+    : (row.geometry && Array.isArray(row.geometry.coordinates)
+        ? Math.round(lineDistanceMeters(row.geometry.coordinates))
+        : null);
   return {
     slug: row.slug,
     name: { en: row.name_en, sk: row.name_sk },
@@ -16,6 +22,9 @@ function prepareHike(row, today) {
     geometry: row.geometry,
     status,
     activeClosures,
+    distance_m,
+    ascent_m: row.ascent_m ?? null,
+    duration_min: row.duration_min ?? null,
   };
 }
 

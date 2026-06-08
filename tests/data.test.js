@@ -29,3 +29,10 @@ test("fetchHikes throws on a non-ok response", async () => {
   const stub = async () => ({ ok: false, status: 503, json: async () => ({}) });
   await assert.rejects(() => fetchHikes({ url: "u", key: "k" }, stub), /503/);
 });
+
+test("fetchHikes requests the stat columns", async () => {
+  let captured;
+  const stub = async (url) => { captured = url; return { ok: true, status: 200, json: async () => [] }; };
+  await fetchHikes({ url: "https://p.supabase.co", key: "K" }, stub);
+  assert.match(decodeURIComponent(captured), /distance_m,ascent_m,duration_min/);
+});
