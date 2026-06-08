@@ -1,12 +1,15 @@
 import { resolveTheme, nextTheme } from "./theme.js";
 import { DICT, t, DEFAULT_LANG, nextLang } from "./i18n.js";
+import { resolveUnits, nextUnits } from "./units.js";
 
 const THEME_KEY = "tt-theme";
 const LANG_KEY = "tt-lang";
+const UNITS_KEY = "tt-units";
 
 export function initUi() {
   initTheme();
   initLang();
+  initUnits();
 }
 
 /* ---- theme ---- */
@@ -64,6 +67,32 @@ function initLang() {
       applyLang(lang);
       try { localStorage.setItem(LANG_KEY, lang); } catch { /* ignore */ }
       emitLangChange(lang);
+    });
+  }
+}
+
+/* ---- units ---- */
+function readStoredUnits() {
+  try { return localStorage.getItem(UNITS_KEY); } catch { return null; }
+}
+function applyUnits(units) {
+  document.documentElement.setAttribute("data-units", units);
+  const btn = document.getElementById("units-toggle");
+  if (btn) btn.textContent = units === "imperial" ? "mi" : "km";
+}
+function emitUnitChange(units) {
+  document.dispatchEvent(new CustomEvent("tt:unitchange", { detail: units }));
+}
+function initUnits() {
+  let units = resolveUnits(readStoredUnits());
+  applyUnits(units);
+  const btn = document.getElementById("units-toggle");
+  if (btn) {
+    btn.addEventListener("click", () => {
+      units = nextUnits(units);
+      applyUnits(units);
+      try { localStorage.setItem(UNITS_KEY, units); } catch { /* ignore */ }
+      emitUnitChange(units);
     });
   }
 }

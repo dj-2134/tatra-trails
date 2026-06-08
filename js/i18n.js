@@ -9,8 +9,6 @@ export const DICT = {
     sk: "Hľadať miesto alebo chodník…",
   },
   "panel.popularHikes": { en: "Popular hikes", sk: "Obľúbené túry" },
-  "panel.planRoute": { en: "Plan a route", sk: "Naplánovať trasu" },
-  "panel.comingSoon": { en: "Coming soon", sk: "Už čoskoro" },
   "legend.open": { en: "Open", sk: "Otvorené" },
   "legend.closed": { en: "Closed", sk: "Zatvorené" },
   "legend.partial": { en: "Partially closed", sk: "Čiastočne uzavreté" },
@@ -22,6 +20,9 @@ export const DICT = {
   "detail.ongoing": { en: "ongoing", sk: "trvá" },
   "detail.source": { en: "Source", sk: "Zdroj" },
   "detail.note": { en: "Note", sk: "Poznámka" },
+  "detail.distance": { en: "Distance", sk: "Dĺžka" },
+  "detail.ascent": { en: "Elevation gain", sk: "Prevýšenie" },
+  "detail.walkingTime": { en: "Walking time", sk: "Čas" },
   "detail.disclaimer": {
     en: "Awareness only. Always verify with TANAP / mountain rescue (HZS) before you go; the absence of a closure here is not a guarantee a trail is open or safe.",
     sk: "Len pre informáciu. Pred túrou si vždy overte stav u TANAP / Horskej záchrannej služby (HZS); chýbajúca uzávera tu neznamená, že chodník je otvorený alebo bezpečný.",
