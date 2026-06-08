@@ -92,8 +92,9 @@ container anchored under the search box in the top bar.
 
 **Interaction** (glue in `js/trails.js`, which holds `HIKES` + `select`):
 - On `input`: `matches = searchHikes(HIKES, value)`; show up to **8** suggestions, each = the hike's name
-  (current language) + its status badge. Non-empty query with **no matches** → a single muted "No matches"
-  line. Empty query → dropdown hidden.
+  (current language) + its status badge + the compact stat line (`12.3 km · ↑540 m · 3 h 30 min`), reusing
+  the existing units-aware `statParts(hike)` helper that the list rows use. Non-empty query with **no
+  matches** → a single muted "No matches" line. Empty query → dropdown hidden.
 - **Click** a suggestion → `select(slug)` then clear the input + close the dropdown.
 - **Enter** → select the top match; **Escape** or click-away → close. (No arrow-key nav.)
 - The dropdown is independent of the grouped list (which stays collapsed) — a pure jump-to-hike.
@@ -168,6 +169,6 @@ selected hike's context.
 1. Exact `.hike-group` / `summary` and `#search-suggestions` CSS (reuse `styles.css` vars; the summary
    should look like a tappable header with a disclosure affordance).
 2. Dropdown max-items is **8**; "No matches" wording.
-3. Suggestion row content = hike name + status badge (no stats, to keep it light).
+3. Suggestion row content = hike name + status badge + the compact stat line (reuses the units-aware `statParts`).
 4. `formatBandRange` numeric formatting detail (metric whole-km integers; imperial 1 decimal).
 5. Scroll-into-view behavior tuning (`block: "nearest"`).
