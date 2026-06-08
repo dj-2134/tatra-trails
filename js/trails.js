@@ -88,9 +88,11 @@ function select(slug) {
 
 function drawRoute(hike) {
   if (ROUTE_LAYER) { MAP.removeLayer(ROUTE_LAYER); ROUTE_LAYER = null; }
-  ROUTE_LAYER = L.geoJSON(hike.geometry, {
-    style: { className: `trail trail--${hike.status}`, weight: 4 },
-  }).addTo(MAP);
+  // A wide casing first (drawn underneath), then the colored line on top — the contrast
+  // lifts the route off the map tiles. A featureGroup keeps getBounds() working.
+  const casing = L.geoJSON(hike.geometry, { style: { className: "trail-casing", weight: 9, opacity: 1 } });
+  const line = L.geoJSON(hike.geometry, { style: { className: `trail trail--${hike.status}`, weight: 5, opacity: 1 } });
+  ROUTE_LAYER = L.featureGroup([casing, line]).addTo(MAP);
   const bounds = ROUTE_LAYER.getBounds();
   if (bounds.isValid()) MAP.fitBounds(bounds, { padding: [40, 40] });
 }
