@@ -6,6 +6,8 @@
   <title>TatraTrails — Admin</title>
   <meta name="robots" content="noindex" />
   <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <!-- Anti-flash: set the theme class before first paint (mirrors js/theme.js). -->
   <script>
     (function () {
@@ -44,6 +46,7 @@
     </aside>
 
     <section id="editor-pane" class="admin-editor" hidden>
+      <div id="admin-map" class="admin-map"></div>
       <div class="admin-editor-head">
         <h2 id="editor-title">New hike</h2>
         <span id="editor-status" class="status-badge open">open</span>
@@ -66,6 +69,17 @@
           <label>Route (GPX) <input id="f-gpx" type="file" accept=".gpx" /></label>
           <span id="f-geom-status" class="admin-msg"></span>
         </div>
+        <div class="admin-stats">
+          <label>Distance (km) <input id="f-distance" type="number" min="0" step="0.1" /></label>
+          <label>Elevation gain (m) <input id="f-ascent" type="number" min="0" step="1" /></label>
+          <label>Walking time
+            <span class="admin-hm">
+              <input id="f-dur-h" type="number" min="0" step="1" /> h
+              <input id="f-dur-min" type="number" min="0" max="59" step="1" /> min
+            </span>
+          </label>
+          <span id="f-stats-hint" class="admin-msg"></span>
+        </div>
       </form>
 
       <section class="admin-closures">
@@ -82,6 +96,8 @@
     </section>
   </main>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script type="module" src="js/admin/ui.js"></script>
 </body>
 </html>

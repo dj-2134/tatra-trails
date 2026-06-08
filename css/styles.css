@@ -107,11 +107,15 @@ html.dark .theme-moon { display: inline; }
   max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column;
 }
 .hike-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  display: flex; flex-direction: column; gap: 2px;
   padding: 9px 12px; border: 0; background: transparent; cursor: pointer;
   font: inherit; color: var(--text); text-align: left; width: 100%;
   border-bottom: 1px solid var(--chrome-border);
 }
+.hike-row-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.hike-row-stats { font-size: 12px; color: var(--muted); }
+.detail-stats { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; }
+.detail-stat strong { color: var(--muted); font-weight: 600; }
 .hike-row:last-child { border-bottom: 0; }
 .hike-row:hover { color: var(--accent); }
 .status-badge {
@@ -186,3 +190,7 @@ body.admin [hidden] { display: none !important; }
 .admin-actions { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
 .admin-danger { color: var(--closed); border-color: var(--closed); }
 .admin-msg { font-size: 13px; color: var(--muted); }
+.admin-map { height: 280px; border: 1px solid var(--chrome-border); border-radius: var(--radius); margin-bottom: 12px; }
+.admin-stats { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.admin-hm { display: inline-flex; align-items: center; gap: 4px; }
+.admin-hm input { width: 56px; }
