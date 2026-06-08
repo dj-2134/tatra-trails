@@ -9,6 +9,8 @@ English-first trail-conditions board for the High Tatras. Increment 1 = the map 
    ```
    Get a free key at https://developer.mapy.com, then edit `js/config.js`.
    **Domain-restrict the key** in the Mapy dashboard (it ships in client-side JS).
+   Also add your Supabase URL + **publishable** key to `js/config.js` (see **Backend (Supabase)** below) —
+   the hikes board and the admin page both need them.
 2. Run the unit tests:
    ```powershell
    node --test

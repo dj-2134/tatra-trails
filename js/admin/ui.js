@@ -99,6 +99,7 @@ function formToHike() {
     note_sk: $("f-note-sk").value.trim() || null,
     ref: $("f-ref").value.trim() || null,
     geometry: state.geometry,
+    updated_at: new Date().toISOString(),
   };
 }
 
