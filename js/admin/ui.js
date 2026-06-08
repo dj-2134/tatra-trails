@@ -186,7 +186,8 @@ async function save() {
     const saved = await upsertHike(hike);
     for (const c of state.closures) {
       if (c._deleted) { if (c.id) await deleteClosure(c.id); continue; }
-      await upsertClosure(saved.id, normalizeClosure(c));
+      const savedC = await upsertClosure(saved.id, normalizeClosure(c));
+      if (savedC && savedC.id) c.id = savedC.id; // capture id so a retry updates, not re-inserts
     }
     msg.textContent = "Saved.";
     await refreshList();
@@ -232,9 +233,15 @@ async function boot() {
   $("f-gpx").addEventListener("change", onGpxChange);
   ["f-seasonal-from", "f-seasonal-to", "f-seasonal-partial"].forEach((id) => $(id).addEventListener("input", updateBadge));
 
-  onAuthChange((session) => { if (session) { showAdmin(); refreshList(); } else showLogin(); });
-  const session = await getSession();
-  if (session) { showAdmin(); await refreshList(); } else showLogin();
+  // onAuthChange fires with the INITIAL_SESSION on subscribe, and we also probe getSession()
+  // explicitly; the `entered` guard makes refreshList run once per sign-in, not twice on boot.
+  let entered = false;
+  const enter = (session) => {
+    if (session) { showAdmin(); if (!entered) { entered = true; refreshList(); } }
+    else { entered = false; showLogin(); }
+  };
+  onAuthChange(enter);
+  enter(await getSession());
 }
 
 boot();
