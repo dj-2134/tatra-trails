@@ -11,6 +11,9 @@ create table if not exists hikes (
   note_en text,
   note_sk text,
   ref text,
+  distance_m   integer check (distance_m   is null or distance_m   >= 0),
+  ascent_m     integer check (ascent_m     is null or ascent_m     >= 0),
+  duration_min integer check (duration_min is null or duration_min >= 0),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint seasonal_pair check ((seasonal_from is null) = (seasonal_to is null))
