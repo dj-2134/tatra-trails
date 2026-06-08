@@ -95,6 +95,7 @@ function renderList() {
     for (const hike of inBand) group.appendChild(renderRow(hike));
     list.appendChild(group);
   }
+  if (SELECTED) applySelection(SELECTED);
 }
 
 function renderRow(hike) {
@@ -130,7 +131,22 @@ function select(slug) {
   const hike = HIKES.find((h) => h.slug === slug);
   if (!hike) return;
   drawRoute(hike);
+  applySelection(slug);
   openDetail(slug);
+}
+
+// Reflect the selected hike in the list: clear prior highlight, open its band group, highlight +
+// scroll its row. Safe when the list is hidden (the detail is open) — visible on "← Back".
+function applySelection(slug) {
+  const list = document.getElementById("hike-list");
+  if (!list) return;
+  list.querySelectorAll(".hike-row.selected").forEach((el) => el.classList.remove("selected"));
+  const row = list.querySelector(`.hike-row[data-slug="${slug}"]`);
+  if (!row) return;
+  row.classList.add("selected");
+  const group = row.closest("details.hike-group");
+  if (group) group.open = true;
+  row.scrollIntoView({ block: "nearest" });
 }
 
 function drawRoute(hike) {

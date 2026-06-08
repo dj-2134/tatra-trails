@@ -118,6 +118,7 @@ html.dark .theme-moon { display: inline; }
 .hike-group > summary::-webkit-details-marker { display: none; }
 .hike-group > summary::before { content: "▸"; font-size: 11px; transition: transform .15s; }
 .hike-group[open] > summary::before { transform: rotate(90deg); }
+.hike-row.selected { color: var(--accent); font-weight: 700; }
 .hike-row:last-child { border-bottom: 0; }
 .hike-row:hover { color: var(--accent); }
 .status-badge {
