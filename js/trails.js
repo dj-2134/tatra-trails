@@ -4,6 +4,7 @@ import { prepareHikes } from "./hikes.js";
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js";
 import { DICT, t } from "./i18n.js";
 import { routeLayer } from "./route-layer.js";
+import { formatDistance, formatAscent, formatDuration } from "./stats-format.js";
 
 let MAP = null;
 let HIKES = [];
@@ -12,6 +13,17 @@ let SELECTED = null; // slug
 
 function lang() {
   return document.documentElement.getAttribute("lang") === "sk" ? "sk" : "en";
+}
+
+function units() {
+  return document.documentElement.getAttribute("data-units") === "imperial" ? "imperial" : "metric";
+}
+
+// Compact list of the available stat strings, e.g. ["12.3 km", "↑540 m", "3 h 30 min"].
+function statParts(hike) {
+  const u = units();
+  return [formatDistance(hike.distance_m, u), formatAscent(hike.ascent_m, u), formatDuration(hike.duration_min)]
+    .filter(Boolean);
 }
 
 // Today's date in the Tatras' local timezone. en-CA formats as YYYY-MM-DD.
@@ -48,6 +60,10 @@ export async function initTrails(map) {
     renderList();
     if (SELECTED) openDetail(SELECTED);
   });
+  document.addEventListener("tt:unitchange", () => {
+    renderList();
+    if (SELECTED) openDetail(SELECTED);
+  });
 }
 
 function renderError() {
@@ -68,12 +84,25 @@ function renderList() {
     const row = document.createElement("button");
     row.type = "button";
     row.className = "hike-row";
+
+    const top = document.createElement("span");
+    top.className = "hike-row-top";
     const name = document.createElement("span");
     name.textContent = hike.name[lang()] || hike.name.en;
     const badge = document.createElement("span");
     badge.className = `status-badge ${hike.status}`;
     badge.textContent = t(DICT, `status.${hike.status}`, lang());
-    row.append(name, badge);
+    top.append(name, badge);
+    row.appendChild(top);
+
+    const parts = statParts(hike);
+    if (parts.length) {
+      const stats = document.createElement("span");
+      stats.className = "hike-row-stats";
+      stats.textContent = parts.join(" · ");
+      row.appendChild(stats);
+    }
+
     row.addEventListener("click", () => select(hike.slug));
     list.appendChild(row);
   }
@@ -115,6 +144,26 @@ function openDetail(slug) {
   badge.textContent = t(DICT, `status.${hike.status}`, L_);
 
   panel.append(back, title, badge);
+
+  const su = units();
+  const statItems = [
+    [t(DICT, "detail.distance", L_), formatDistance(hike.distance_m, su)],
+    [t(DICT, "detail.ascent", L_), formatAscent(hike.ascent_m, su)],
+    [t(DICT, "detail.walkingTime", L_), formatDuration(hike.duration_min)],
+  ].filter(([, v]) => v);
+  if (statItems.length) {
+    const stats = document.createElement("div");
+    stats.className = "detail-stats";
+    for (const [label, value] of statItems) {
+      const item = document.createElement("span");
+      item.className = "detail-stat";
+      const l = document.createElement("strong");
+      l.textContent = `${label} `;
+      item.append(l, document.createTextNode(value));
+      stats.appendChild(item);
+    }
+    panel.appendChild(stats);
+  }
 
   for (const c of hike.activeClosures) {
     const div = document.createElement("div");
