@@ -3,14 +3,13 @@
 import { getSession, sendMagicLink, signOut, onAuthChange } from "./auth.js";
 import { listHikes, upsertHike, deleteHike, upsertClosure, deleteClosure,
          listRegions, setHikeRegions, setRegionPublic } from "./store.js";
-import { gpxToLineString } from "./gpx.js";
+import { gpxToLineString, gpxStats, gpxName } from "./gpx.js";
 import { validateHike, validateClosure, validateRegionSelection } from "./validate.js";
 import { suggestRegions } from "../region-geo.js";
 import { normalizeText } from "../search.js";
 import { computeStatus } from "../status.js";
 import { initMap } from "../map.js";
 import { routeLayer } from "../route-layer.js";
-import { gpxStats } from "./gpx.js";
 import { estimateDurationMin } from "../stats.js";
 
 let HIKES = [];
@@ -298,6 +297,8 @@ async function onGpxChange(e) {
     drawAdminRoute(state.geometry);
     const suggested = suggestRegions(state.geometry.coordinates, REGIONS);
     if (suggested.length) setSelectedRegionIds(suggested);
+    const gname = gpxName(text);
+    if (gname && !$("f-name-sk").value.trim()) $("f-name-sk").value = gname;
   } catch (err) {
     $("f-geom-status").textContent = `GPX error: ${err.message}`; // geometry + fields unchanged
   }
