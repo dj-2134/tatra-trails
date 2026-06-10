@@ -1,7 +1,7 @@
 // tests/gpx.test.js
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { gpxToLineString, gpxStats } from "../js/admin/gpx.js";
+import { gpxToLineString, gpxStats, gpxName } from "../js/admin/gpx.js";
 
 const TRK = `<?xml version="1.0"?>
 <gpx><trk><trkseg>
@@ -73,4 +73,31 @@ test("gpxStats: ascent is null when the track has no elevation", () => {
   const { distanceM, ascentM } = gpxStats(gpx);
   assert.ok(distanceM > 0);
   assert.equal(ascentM, null);
+});
+
+test("gpxName: extracts the <trk><name>", () => {
+  const gpx = `<gpx><trk><name>Štrbské Pleso → Popradské Pleso</name><trkseg></trkseg></trk></gpx>`;
+  assert.equal(gpxName(gpx), "Štrbské Pleso → Popradské Pleso");
+});
+
+test("gpxName: prefers <trk><name> over <metadata><name>", () => {
+  const gpx = `<gpx><metadata><name>Meta name</name></metadata><trk><name>Track name</name></trk></gpx>`;
+  assert.equal(gpxName(gpx), "Track name");
+});
+
+test("gpxName: falls back to <rte><name> when there is no track", () => {
+  const gpx = `<gpx><rte><name>Route name</name></rte></gpx>`;
+  assert.equal(gpxName(gpx), "Route name");
+});
+
+test("gpxName: trims whitespace and decodes basic XML entities", () => {
+  const gpx = `<gpx><trk><name>  A &amp; B &lt;x&gt;  </name></trk></gpx>`;
+  assert.equal(gpxName(gpx), "A & B <x>");
+});
+
+test("gpxName: null when there is no name or it is empty", () => {
+  assert.equal(gpxName(`<gpx><trk><trkseg></trkseg></trk></gpx>`), null);
+  assert.equal(gpxName(`<gpx><trk><name>   </name></trk></gpx>`), null);
+  assert.equal(gpxName(""), null);
+  assert.equal(gpxName(null), null);
 });

@@ -76,3 +76,36 @@ export function gpxStats(gpxText) {
   }
   return { distanceM, ascentM };
 }
+
+// Decode the five basic XML entities. &amp; is decoded LAST so "&amp;lt;" stays literal "&lt;".
+function decodeXmlEntities(s) {
+  return s
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, "&");
+}
+
+// First <name> text, preferring <trk> → <rte> → <metadata>, else any <name>. Trimmed + entity-decoded.
+// Returns null when there is no usable (non-empty) name.
+export function gpxName(gpxText) {
+  const s = String(gpxText == null ? "" : gpxText);
+  const nameIn = (block) => {
+    if (!block) return null;
+    const m = block.match(/<name>([\s\S]*?)<\/name>/i);
+    return m ? m[1] : null;
+  };
+  const blockOf = (tag) => {
+    const m = s.match(new RegExp(`<${tag}\\b[\\s\\S]*?</${tag}>`, "i"));
+    return m ? m[0] : null;
+  };
+  let raw = nameIn(blockOf("trk")) ?? nameIn(blockOf("rte")) ?? nameIn(blockOf("metadata"));
+  if (raw == null) {
+    const any = s.match(/<name>([\s\S]*?)<\/name>/i);
+    raw = any ? any[1] : null;
+  }
+  if (raw == null) return null;
+  const out = decodeXmlEntities(raw).trim();
+  return out || null;
+}
