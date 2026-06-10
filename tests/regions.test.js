@@ -64,3 +64,22 @@ test("groupHikesByRegion: a public region whose only hike is private is omitted"
   const hikes = [{ ...h("hidden", 1000, [1]), is_public: false }];
   assert.deepEqual(groupHikesByRegion(hikes, [R.vt]), []);
 });
+
+test("publicVisibleHikes: showAll returns every hike regardless of region/is_public", () => {
+  const hikes = [
+    { ...h("pub", 1000, [1]) },
+    { ...h("privregion", 1000, [3]) },                 // only a private region
+    { ...h("hidden", 1000, [1]), is_public: false },   // private hike
+    { ...h("noregion", 1000, []) },                    // no region at all
+  ];
+  const got = publicVisibleHikes(hikes, [R.vt, R.vv], true).map((x) => x.slug).sort();
+  assert.deepEqual(got, ["hidden", "noregion", "privregion", "pub"]);
+});
+
+test("groupHikesByRegion: showAll includes private regions that have hikes", () => {
+  const hikes = [{ ...h("vvh", 1000, [3]) }]; // in VV (private)
+  assert.deepEqual(groupHikesByRegion(hikes, [R.vv], false), []);          // off: private region omitted
+  const model = groupHikesByRegion(hikes, [R.vv], true);                   // on: shown
+  assert.deepEqual(model.map((g) => g.region.slug), ["volovske-vrchy"]);
+  assert.deepEqual(model[0].bands.flatMap((b) => b.hikes.map((x) => x.slug)), ["vvh"]);
+});

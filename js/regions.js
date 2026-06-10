@@ -22,21 +22,22 @@ function publicRegionIdSet(regions) {
 }
 
 // Hikes belonging to >=1 public region AND not individually hidden. region_ids: number[];
-// is_public defaults to public when absent (lenient: only an explicit false hides a hike).
-export function publicVisibleHikes(hikes, regions) {
+// is_public defaults to public when absent. showAll=true returns ALL hikes (authenticated full view).
+export function publicVisibleHikes(hikes, regions, showAll = false) {
+  if (showAll) return [...(hikes || [])];
   const pub = publicRegionIdSet(regions);
   return (hikes || []).filter(
     (h) => h.is_public !== false && (h.region_ids || []).some((id) => pub.has(id))
   );
 }
 
-// Render model: [{ region, bands:[{ band, hikes }] }] for each PUBLIC, NON-EMPTY region,
-// regions east→west, bands in BANDS order, each hike under each public region it belongs to.
-export function groupHikesByRegion(hikes, regions) {
-  const visible = publicVisibleHikes(hikes, regions);
+// Render model: [{ region, bands:[{ band, hikes }] }]. showAll=false → public, non-empty regions only
+// (today's behavior). showAll=true → EVERY non-empty region (private included) + all hikes.
+export function groupHikesByRegion(hikes, regions, showAll = false) {
+  const visible = publicVisibleHikes(hikes, regions, showAll);
   const out = [];
   for (const region of sortRegionsEastWest(regions)) {
-    if (!region.is_public) continue;
+    if (!showAll && !region.is_public) continue;
     const inRegion = visible.filter((h) => (h.region_ids || []).includes(region.id));
     if (!inRegion.length) continue;
     const bands = [];
