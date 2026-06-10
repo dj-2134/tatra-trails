@@ -281,6 +281,18 @@ function durationFromFields() {
 }
 function numOrNull(v) { const n = parseFloat(v); return Number.isFinite(n) ? n : null; }
 
+// Copy "→" to the clipboard (hike names are route-style, e.g. "A → B"). Briefly flash feedback.
+async function copyArrow() {
+  try {
+    await navigator.clipboard.writeText("→");
+    const btn = $("copy-arrow");
+    btn.textContent = "copied ✓";
+    setTimeout(() => { btn.textContent = "→"; }, 1000);
+  } catch (e) {
+    // Clipboard unavailable/denied — the visible "→" can still be selected manually.
+  }
+}
+
 // ---- GPX upload ----
 async function onGpxChange(e) {
   const file = e.target.files && e.target.files[0];
@@ -374,6 +386,7 @@ async function boot() {
   $("save-hike").addEventListener("click", save);
   $("delete-hike").addEventListener("click", remove);
   $("f-gpx").addEventListener("change", onGpxChange);
+  $("copy-arrow").addEventListener("click", copyArrow);
   $("f-region-filter").addEventListener("input", (e) => filterRegionPicker(e.target.value));
   ["f-seasonal-from", "f-seasonal-to", "f-seasonal-partial"].forEach((id) => $(id).addEventListener("input", updateBadge));
 
