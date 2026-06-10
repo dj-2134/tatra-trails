@@ -8,7 +8,7 @@ export async function listHikes() {
     .from("hikes")
     .select(
       "id,slug,name_en,name_sk,geometry,seasonal_from,seasonal_to,seasonal_partial,note_en,note_sk,ref," +
-        "distance_m,ascent_m,duration_min," +
+        "distance_m,ascent_m,duration_min,is_public," +
         "closures(id,from_date,to_date,partial,reason_en,reason_sk,source)," +
         "hike_regions(region_id)"
     )

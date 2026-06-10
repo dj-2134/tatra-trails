@@ -120,7 +120,8 @@ function blankHike() {
   return { id: null, isNew: true, slug: "", name_en: "", name_sk: "",
     seasonal_from: "", seasonal_to: "", seasonal_partial: false,
     note_en: "", note_sk: "", ref: "", geometry: null, closures: [],
-    distance_m: null, ascent_m: null, duration_min: null, region_ids: [] };
+    distance_m: null, ascent_m: null, duration_min: null, region_ids: [],
+    is_public: true };
 }
 
 function loadEditor(h) {
@@ -131,6 +132,7 @@ function loadEditor(h) {
   $("f-slug").disabled = !h.isNew; // slug is the stable join key: read-only after create
   $("f-name-en").value = h.name_en || "";
   $("f-name-sk").value = h.name_sk || "";
+  $("f-public").checked = h.is_public !== false;
   $("f-seasonal-from").value = h.seasonal_from || "";
   $("f-seasonal-to").value = h.seasonal_to || "";
   $("f-seasonal-partial").checked = !!h.seasonal_partial;
@@ -167,6 +169,7 @@ function editHike(row) {
     closures: (row.closures || []).map((c) => ({ ...c })),
     distance_m: row.distance_m ?? null, ascent_m: row.ascent_m ?? null, duration_min: row.duration_min ?? null,
     region_ids: (row.hike_regions || []).map((x) => x.region_id),
+    is_public: row.is_public !== false,
   });
 }
 
@@ -186,6 +189,7 @@ function formToHike() {
     distance_m: numOrNull($("f-distance").value) != null ? Math.round(numOrNull($("f-distance").value) * 1000) : null,
     ascent_m: numOrNull($("f-ascent").value) != null ? Math.round(numOrNull($("f-ascent").value)) : null,
     duration_min: durationFromFields(),
+    is_public: $("f-public").checked,
     updated_at: new Date().toISOString(),
   };
 }
