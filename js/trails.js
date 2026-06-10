@@ -376,11 +376,6 @@ async function enterAuthenticated() {
   const token = session.access_token;
   let allowed = false;
   try { allowed = (await fetchAllowedSelf(SB, fetch, token)).length > 0; } catch (e) { allowed = false; }
-  const note = document.getElementById("auth-note");
-  if (note) {
-    if (allowed) { note.hidden = true; note.textContent = ""; }
-    else { note.hidden = false; note.textContent = t(DICT, "auth.guest", lang()); }
-  }
   try {
     const [hrows, rrows] = await Promise.all([
       fetchHikes(SB, fetch, token),
