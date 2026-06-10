@@ -64,6 +64,28 @@ changes appear there immediately.
 > The admin loads `supabase-js` from an ESM CDN (admin page only); the public site stays
 > dependency-free. Writes carry the session JWT and are RLS-scoped to the founder's uid.
 
+## Regions (Increment C)
+
+TatraTrails is organized by Slovak mountain range. Hikes are grouped **Region → distance band → hike** on the public board.
+
+### Setup
+In Supabase Studio → SQL Editor, run the scripts **in order**:
+1. `db/add-regions.sql` — creates the `regions` table and the `hike_regions` M:N join table, and enables RLS.
+2. `db/seed-regions.sql` — populates the full Slovak geomorphological taxonomy (*celky*: mountain ranges, highlands, basins, plains) and migrates all existing hikes into **Vysoké Tatry**.
+
+### Organization
+- Regions are ordered **east → west** automatically, derived from a stored `centroid_lon`.
+- A region appears on the public board only when it is **marked public AND has ≥ 1 hike assigned**.
+- Most regions are seeded with `is_public = false`; only Vysoké Tatry is published so existing content keeps showing immediately.
+
+### Admin usage
+- Every hike must have **≥ 1 region** assigned via the region multi-select in `admin.html`.
+- **GPX upload pre-suggests** the nearest region(s) by centroid distance — confirm or adjust before saving.
+- Use the **Public regions** toggles to publish a region once it has hikes assigned.
+
+### Visibility caveat
+Public/private is **display-level only** in this increment. The public list and search hide non-public regions and hikes, but all rows remain reachable via the anon API. Hard server-side RLS enforcement (withholding private rows at the database level) is a later increment.
+
 ## Attribution
 Map tiles © Seznam.cz a.s. and others (Mapy.com). Later increments add trail data from
 OpenStreetMap (© OpenStreetMap contributors, ODbL) and closure rules from TANAP (tanap.org).
