@@ -49,3 +49,18 @@ test("groupHikesByRegion: public+non-empty regions east→west; hike under each 
 test("groupHikesByRegion: an all-private/empty world yields []", () => {
   assert.deepEqual(groupHikesByRegion([h("x", 1000, [3])], [R.vv]), []);
 });
+
+test("publicVisibleHikes: a hike with is_public:false is excluded even in a public region", () => {
+  const hikes = [
+    { ...h("vis", 1000, [1]) },                       // public region, no flag -> visible (lenient)
+    { ...h("hidden", 1000, [1]), is_public: false },  // public region but hike private -> excluded
+    { ...h("shown", 1000, [1]), is_public: true },    // explicit true -> visible
+  ];
+  const got = publicVisibleHikes(hikes, [R.vt]).map((x) => x.slug).sort();
+  assert.deepEqual(got, ["shown", "vis"]);
+});
+
+test("groupHikesByRegion: a public region whose only hike is private is omitted", () => {
+  const hikes = [{ ...h("hidden", 1000, [1]), is_public: false }];
+  assert.deepEqual(groupHikesByRegion(hikes, [R.vt]), []);
+});

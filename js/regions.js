@@ -21,10 +21,13 @@ function publicRegionIdSet(regions) {
   return new Set((regions || []).filter((r) => r && r.is_public).map((r) => r.id));
 }
 
-// Hikes belonging to >=1 public region. Each hike carries region_ids: number[].
+// Hikes belonging to >=1 public region AND not individually hidden. region_ids: number[];
+// is_public defaults to public when absent (lenient: only an explicit false hides a hike).
 export function publicVisibleHikes(hikes, regions) {
   const pub = publicRegionIdSet(regions);
-  return (hikes || []).filter((h) => (h.region_ids || []).some((id) => pub.has(id)));
+  return (hikes || []).filter(
+    (h) => h.is_public !== false && (h.region_ids || []).some((id) => pub.has(id))
+  );
 }
 
 // Render model: [{ region, bands:[{ band, hikes }] }] for each PUBLIC, NON-EMPTY region,
