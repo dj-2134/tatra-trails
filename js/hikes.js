@@ -26,6 +26,7 @@ function prepareHike(row, today) {
     ascent_m: row.ascent_m ?? null,
     duration_min: row.duration_min ?? null,
     region_ids: Array.isArray(row.hike_regions) ? row.hike_regions.map((x) => x.region_id) : [],
+    is_public: row.is_public !== false,
   };
 }
 

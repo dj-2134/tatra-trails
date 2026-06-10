@@ -61,3 +61,13 @@ test("prepareHikes: maps stat fields and falls back to geometry distance", () =>
   assert.equal(b.distance_m, 5000); // an explicit value wins over the fallback
   assert.equal(b.ascent_m, null);
 });
+
+test("prepareHikes: maps is_public (absent → true, explicit false → false)", () => {
+  const geom = { type: "LineString", coordinates: [[0, 0], [1, 1]] };
+  const [a, b] = prepareHikes([
+    { slug: "a", name_en: "A", name_sk: "A", geometry: geom },                   // no is_public
+    { slug: "b", name_en: "B", name_sk: "B", geometry: geom, is_public: false }, // explicit false
+  ], { iso: "2026-06-10", mmdd: "06-10" });
+  assert.equal(a.is_public, true);
+  assert.equal(b.is_public, false);
+});

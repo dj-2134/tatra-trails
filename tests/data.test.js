@@ -35,6 +35,7 @@ test("fetchHikes requests the stat columns", async () => {
   const stub = async (url) => { captured = url; return { ok: true, status: 200, json: async () => [] }; };
   await fetchHikes({ url: "https://p.supabase.co", key: "K" }, stub);
   assert.match(decodeURIComponent(captured), /distance_m,ascent_m,duration_min/);
+  assert.match(decodeURIComponent(captured), /is_public/);
 });
 
 test("fetchRegions: hits /regions with the apikey header", async () => {
