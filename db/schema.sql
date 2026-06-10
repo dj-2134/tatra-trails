@@ -44,7 +44,7 @@ create policy "admin write hikes"     on hikes    for all to authenticated using
 create policy "admin write closures"  on closures for all to authenticated using (true) with check (true);
 
 -- Increment C: Slovakia-wide regions (geomorphological celky) + M:N hike memberships.
-create table regions (
+create table if not exists regions (
   id bigint generated always as identity primary key,
   slug text unique not null,
   name_en text not null,
@@ -57,13 +57,13 @@ create table regions (
   updated_at timestamptz not null default now()
 );
 
-create table hike_regions (
+create table if not exists hike_regions (
   hike_id   bigint not null references hikes(id)   on delete cascade,
   region_id bigint not null references regions(id) on delete cascade,
   primary key (hike_id, region_id)
 );
 
-create index hike_regions_region_id_idx on hike_regions (region_id);
+create index if not exists hike_regions_region_id_idx on hike_regions (region_id);
 
 -- RLS: public may READ; only the authenticated admin may write (mirrors hikes/closures).
 -- NOTE: read is intentionally unrestricted in Increment C — public/private is enforced
