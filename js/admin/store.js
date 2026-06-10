@@ -55,7 +55,8 @@ export async function listRegions() {
   const { data, error } = await supabase
     .from("regions")
     .select("id,slug,name_en,name_sk,kraj,centroid_lon,centroid_lat,is_public")
-    .order("centroid_lon", { ascending: false, nullsFirst: false });
+    .order("centroid_lon", { ascending: false, nullsFirst: false })
+    .order("name_sk"); // tiebreak: match the public board's east→west + name_sk ordering
   if (error) throw error;
   return data || [];
 }
