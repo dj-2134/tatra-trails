@@ -224,3 +224,31 @@ body.admin [hidden] { display: none !important; }
 .search-item:last-child { border-bottom: 0; }
 .search-item:hover { color: var(--accent); }
 .search-empty { padding: 8px 12px; font-size: 13px; color: var(--muted); }
+
+/* --- Increment C: region groups wrap the band groups in the public list --- */
+.region-group { border-bottom: 1px solid var(--chrome-border); }
+.region-group:last-child { border-bottom: 0; }
+.region-group > summary {
+  list-style: none; cursor: pointer; padding: 11px 12px; font-weight: 700;
+  color: var(--accent); font-size: 14px; display: flex; align-items: center; gap: 6px;
+}
+.region-group > summary::-webkit-details-marker { display: none; }
+.region-group > summary::before { content: "▸"; font-size: 11px; transition: transform .15s; }
+.region-group[open] > summary::before { transform: rotate(90deg); }
+/* indent the nested band groups + rows under their region */
+.region-group .hike-group > summary { padding-left: 26px; font-weight: 600; }
+.region-group .hike-row { padding-left: 26px; }
+
+/* --- admin: region multi-select + visibility toggles --- */
+.admin-regions {
+  display: flex; flex-direction: column; gap: 8px;
+  border: 1px solid var(--chrome-border); border-radius: 8px; padding: 8px 10px;
+}
+.admin-regions legend { font-size: 13px; color: var(--muted); padding: 0 4px; }
+.admin-region-list { display: flex; flex-direction: column; gap: 2px; max-height: 180px; overflow: auto; }
+.admin-region-list label { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 2px 0; }
+.admin-region-list label.hidden { display: none; }
+.admin-visibility { margin-top: 12px; }
+.admin-visibility > summary { cursor: pointer; font-weight: 700; color: var(--accent); font-size: 13px; }
+#region-visibility-list { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+#region-visibility-list label { display: flex; align-items: center; gap: 8px; font-size: 13px; }
