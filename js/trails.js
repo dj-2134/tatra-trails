@@ -1,15 +1,17 @@
 // js/trails.js — DOM/Leaflet orchestration (thin, impure binding around the pure modules).
-import { fetchHikes } from "./data.js";
+import { fetchHikes, fetchRegions } from "./data.js";
+import { groupHikesByRegion, publicVisibleHikes } from "./regions.js";
 import { prepareHikes } from "./hikes.js";
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js";
 import { DICT, t } from "./i18n.js";
 import { routeLayer } from "./route-layer.js";
 import { formatDistance, formatAscent, formatDuration } from "./stats-format.js";
-import { BANDS, bandForDistance, formatBandRange } from "./bands.js";
+import { formatBandRange } from "./bands.js";
 import { searchHikes } from "./search.js";
 
 let MAP = null;
 let HIKES = [];
+let REGIONS = [];
 let ROUTE_LAYER = null;
 let SELECTED = null; // slug
 
@@ -19,6 +21,10 @@ function lang() {
 
 function units() {
   return document.documentElement.getAttribute("data-units") === "imperial" ? "imperial" : "metric";
+}
+
+function regionName(region) {
+  return lang() === "sk" ? (region.name_sk || region.name_en) : (region.name_en || region.name_sk);
 }
 
 // Compact list of the available stat strings, e.g. ["12.3 km", "↑540 m", "3 h 30 min"].
@@ -56,6 +62,11 @@ export async function initTrails(map) {
     renderError();
     return;
   }
+  try {
+    REGIONS = await fetchRegions({ url: SUPABASE_URL, key: SUPABASE_PUBLISHABLE_KEY });
+  } catch (e) {
+    REGIONS = [];
+  }
   HIKES = prepareHikes(rows, todayInBratislava());
   renderList();
   initSearch();
@@ -87,7 +98,7 @@ function initSearch() {
     const q = input.value;
     box.innerHTML = "";
     if (!q.trim()) { close(); return; }
-    matches = searchHikes(HIKES, q).slice(0, 8);
+    matches = searchHikes(publicVisibleHikes(HIKES, REGIONS), q).slice(0, 8);
     if (!matches.length) {
       const empty = document.createElement("div");
       empty.className = "search-empty";
@@ -150,18 +161,28 @@ function renderList() {
   if (!list) return;
   list.innerHTML = "";
   const u = units();
-  for (const band of BANDS) {
-    const inBand = HIKES.filter((h) => bandForDistance(h.distance_m) === band.key);
-    if (!inBand.length) continue;
-    const group = document.createElement("details");
-    group.className = "hike-group";
-    group.dataset.band = band.key;
-    const summary = document.createElement("summary");
-    summary.textContent =
-      `${t(DICT, `band.${band.key}`, lang())} · ${formatBandRange(band, u)} · ${inBand.length}`;
-    group.appendChild(summary);
-    for (const hike of inBand) group.appendChild(renderRow(hike));
-    list.appendChild(group);
+  const model = groupHikesByRegion(HIKES, REGIONS);
+  for (const { region, bands } of model) {
+    const count = bands.reduce((n, b) => n + b.hikes.length, 0);
+    const regionEl = document.createElement("details");
+    regionEl.className = "region-group";
+    regionEl.dataset.region = region.slug;
+    const rSummary = document.createElement("summary");
+    rSummary.textContent = `${regionName(region)} · ${count}`;
+    regionEl.appendChild(rSummary);
+
+    for (const { band, hikes } of bands) {
+      const group = document.createElement("details");
+      group.className = "hike-group";
+      group.dataset.band = band.key;
+      const summary = document.createElement("summary");
+      summary.textContent =
+        `${t(DICT, `band.${band.key}`, lang())} · ${formatBandRange(band, u)} · ${hikes.length}`;
+      group.appendChild(summary);
+      for (const hike of hikes) group.appendChild(renderRow(hike));
+      regionEl.appendChild(group);
+    }
+    list.appendChild(regionEl);
   }
   if (SELECTED) applySelection(SELECTED);
 }
@@ -214,6 +235,8 @@ function applySelection(slug) {
   row.classList.add("selected");
   const group = row.closest("details.hike-group");
   if (group) group.open = true;
+  const regionEl = row.closest("details.region-group");
+  if (regionEl) regionEl.open = true;
   row.scrollIntoView({ block: "nearest" });
 }
 
