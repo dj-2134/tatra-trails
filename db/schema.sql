@@ -39,8 +39,6 @@ create index if not exists closures_hike_id_idx on closures (hike_id);
 alter table hikes enable row level security;
 alter table closures enable row level security;
 
-create policy "public read hikes"    on hikes    for select using (true);
-create policy "public read closures" on closures for select using (true);
 create policy "admin write hikes"     on hikes    for all to authenticated using (true) with check (true);
 create policy "admin write closures"  on closures for all to authenticated using (true) with check (true);
 
@@ -72,7 +70,20 @@ create index if not exists hike_regions_region_id_idx on hike_regions (region_id
 alter table regions      enable row level security;
 alter table hike_regions enable row level security;
 
-create policy "public read regions"      on regions      for select using (true);
-create policy "public read hike_regions" on hike_regions for select using (true);
 create policy "admin write regions"      on regions      for all to authenticated using (true) with check (true);
 create policy "admin write hike_regions" on hike_regions for all to authenticated using (true) with check (true);
+
+-- Increment D1: role-scoped read policies (anon = public only; authenticated = all).
+create policy "authed read hikes"        on hikes        for select to authenticated using (true);
+create policy "authed read closures"     on closures     for select to authenticated using (true);
+create policy "authed read regions"      on regions      for select to authenticated using (true);
+create policy "authed read hike_regions" on hike_regions for select to authenticated using (true);
+
+create policy "anon read regions" on regions for select to anon
+  using (regions.is_public);
+create policy "anon read hike_regions" on hike_regions for select to anon
+  using (exists (select 1 from regions r where r.id = hike_regions.region_id and r.is_public));
+create policy "anon read hikes" on hikes for select to anon
+  using (hikes.is_public and exists (select 1 from hike_regions hr where hr.hike_id = hikes.id));
+create policy "anon read closures" on closures for select to anon
+  using (exists (select 1 from hikes h where h.id = closures.hike_id));
