@@ -79,3 +79,20 @@ export async function setRegionPublic(regionId, isPublic) {
     .eq("id", regionId);
   if (error) throw error;
 }
+
+// allowed_viewers management (owner-only via RLS). The owner sees the full list; friends see only self.
+export async function listViewers() {
+  const { data, error } = await supabase
+    .from("allowed_viewers").select("email,role,added_at").order("role").order("email");
+  if (error) throw error;
+  return data || [];
+}
+export async function addViewer(email, role) {
+  const { error } = await supabase
+    .from("allowed_viewers").upsert({ email: email.trim().toLowerCase(), role }, { onConflict: "email" });
+  if (error) throw error;
+}
+export async function removeViewer(email) {
+  const { error } = await supabase.from("allowed_viewers").delete().eq("email", email);
+  if (error) throw error;
+}

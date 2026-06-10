@@ -2,7 +2,8 @@
 // two-pane DOM. Thin/impure binding layer (manually verified), like trails.js in Phase 1.
 import { getSession, sendMagicLink, signOut, onAuthChange } from "./auth.js";
 import { listHikes, upsertHike, deleteHike, upsertClosure, deleteClosure,
-         listRegions, setHikeRegions, setRegionPublic } from "./store.js";
+         listRegions, setHikeRegions, setRegionPublic,
+         listViewers, addViewer, removeViewer } from "./store.js";
 import { gpxToLineString, gpxStats, gpxName } from "./gpx.js";
 import { validateHike, validateClosure, validateRegionSelection } from "./validate.js";
 import { suggestRegions } from "../region-geo.js";
@@ -50,6 +51,7 @@ async function refreshList() {
   }
   renderRegionPicker();
   renderVisibility();
+  renderViewers();
 }
 
 function markSelected(slug) {
@@ -112,6 +114,36 @@ function renderVisibility() {
     label.append(cb, document.createTextNode(` ${r.name_en}`));
     wrap.appendChild(label);
   }
+}
+
+async function renderViewers() {
+  const wrap = $("viewer-list");
+  if (!wrap) return;
+  let rows = [];
+  try { rows = await listViewers(); } catch (e) { wrap.textContent = errorText(e); return; }
+  wrap.innerHTML = "";
+  for (const v of rows) {
+    const row = document.createElement("div");
+    row.className = "admin-viewer-row";
+    const label = document.createElement("span");
+    label.textContent = `${v.email} — ${v.role}`;
+    const rm = document.createElement("button");
+    rm.type = "button"; rm.className = "chip admin-danger"; rm.textContent = "✕";
+    rm.addEventListener("click", async () => {
+      try { await removeViewer(v.email); await renderViewers(); }
+      catch (e) { alert(errorText(e)); }
+    });
+    row.append(label, rm);
+    wrap.appendChild(row);
+  }
+}
+
+async function onAddViewer() {
+  const email = $("viewer-email").value.trim();
+  if (!email) return;
+  const role = $("viewer-role").value;
+  try { await addViewer(email, role); $("viewer-email").value = ""; await renderViewers(); }
+  catch (e) { alert(errorText(e)); }
 }
 
 // ---- editor ----
@@ -388,6 +420,7 @@ async function boot() {
   $("f-gpx").addEventListener("change", onGpxChange);
   $("copy-arrow").addEventListener("click", copyArrow);
   $("f-region-filter").addEventListener("input", (e) => filterRegionPicker(e.target.value));
+  $("add-viewer").addEventListener("click", onAddViewer);
   ["f-seasonal-from", "f-seasonal-to", "f-seasonal-partial"].forEach((id) => $(id).addEventListener("input", updateBadge));
 
   // onAuthChange fires with the INITIAL_SESSION on subscribe, and we also probe getSession()

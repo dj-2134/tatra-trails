@@ -48,6 +48,15 @@
         <summary>Public regions</summary>
         <div id="region-visibility-list"></div>
       </details>
+      <details class="admin-visibility">
+        <summary>Viewers (friends)</summary>
+        <div id="viewer-list"></div>
+        <div class="admin-viewer-add">
+          <input id="viewer-email" type="email" placeholder="friend@gmail.com" />
+          <select id="viewer-role"><option value="friend">friend</option><option value="owner">owner</option></select>
+          <button id="add-viewer" class="chip" type="button">Add</button>
+        </div>
+      </details>
     </aside>
 
     <section id="editor-pane" class="admin-editor" hidden>
