@@ -36,6 +36,13 @@ export function validateHike(hike) {
   return errs;
 }
 
+// region selection: number[] -> string[]. At least one region membership is required.
+export function validateRegionSelection(regionIds) {
+  return Array.isArray(regionIds) && regionIds.length > 0
+    ? []
+    : ["Pick at least one region."];
+}
+
 // closure: { from_date, to_date, partial, reason_en, reason_sk, source } -> string[].
 // ISO date strings compare lexicographically, so `<` is a valid ordering test.
 export function validateClosure(closure) {

@@ -1,7 +1,7 @@
 // tests/validate.test.js
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { validateHike, validateClosure } from "../js/admin/validate.js";
+import { validateHike, validateClosure, validateRegionSelection } from "../js/admin/validate.js";
 
 const goodGeom = { type: "LineString", coordinates: [[20, 49], [20.1, 49.1]] };
 
@@ -71,4 +71,15 @@ test("validateHike: stats are optional, reject negatives", () => {
   assert.deepEqual(validateHike(base), []); // all absent is fine
   assert.ok(validateHike({ ...base, distance_m: -5 }).some((e) => /Distance/.test(e)));
   assert.ok(validateHike({ ...base, ascent_m: -1 }).some((e) => /Elevation gain/.test(e)));
+});
+
+test("validateRegionSelection: >=1 id is valid", () => {
+  assert.deepEqual(validateRegionSelection([1]), []);
+  assert.deepEqual(validateRegionSelection([1, 2, 3]), []);
+});
+
+test("validateRegionSelection: empty / non-array is an error", () => {
+  assert.equal(validateRegionSelection([]).length, 1);
+  assert.equal(validateRegionSelection(null).length, 1);
+  assert.equal(validateRegionSelection(undefined).length, 1);
 });
