@@ -39,8 +39,6 @@ create index if not exists closures_hike_id_idx on closures (hike_id);
 alter table hikes enable row level security;
 alter table closures enable row level security;
 
-create policy "admin write hikes"     on hikes    for all to authenticated using (true) with check (true);
-create policy "admin write closures"  on closures for all to authenticated using (true) with check (true);
 
 -- Increment C: Slovakia-wide regions (geomorphological celky) + M:N hike memberships.
 create table if not exists regions (
@@ -70,8 +68,6 @@ create index if not exists hike_regions_region_id_idx on hike_regions (region_id
 alter table regions      enable row level security;
 alter table hike_regions enable row level security;
 
-create policy "admin write regions"      on regions      for all to authenticated using (true) with check (true);
-create policy "admin write hike_regions" on hike_regions for all to authenticated using (true) with check (true);
 
 -- Increment D1: role-scoped read policies (anon = public only; authenticated = all).
 -- D1 authed read policies replaced by D2a below.
@@ -118,3 +114,9 @@ create policy "authed read hikes" on hikes for select to authenticated
          or exists (select 1 from allowed_viewers av where av.email = (auth.jwt() ->> 'email')));
 create policy "authed read closures" on closures for select to authenticated
   using (exists (select 1 from hikes h where h.id = closures.hike_id));
+
+-- Increment D2a: writes restricted to the owner (role-based via is_owner()).
+create policy "admin write hikes"        on hikes        for all to authenticated using (public.is_owner()) with check (public.is_owner());
+create policy "admin write closures"     on closures     for all to authenticated using (public.is_owner()) with check (public.is_owner());
+create policy "admin write regions"      on regions      for all to authenticated using (public.is_owner()) with check (public.is_owner());
+create policy "admin write hike_regions" on hike_regions for all to authenticated using (public.is_owner()) with check (public.is_owner());
