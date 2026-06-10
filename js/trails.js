@@ -376,7 +376,6 @@ async function enterAuthenticated() {
   const token = session.access_token;
   let allowed = false;
   try { allowed = (await fetchAllowedSelf(SB, fetch, token)).length > 0; } catch (e) { allowed = false; }
-  SHOW_ALL = allowed;
   const note = document.getElementById("auth-note");
   if (note) {
     if (allowed) { note.hidden = true; note.textContent = ""; }
@@ -389,6 +388,7 @@ async function enterAuthenticated() {
     ]);
     HIKES = prepareHikes(hrows, todayInBratislava());
     REGIONS = rrows;
+    SHOW_ALL = allowed; // set only after the authenticated data is in, so a failed re-fetch leaves SHOW_ALL=false (coherent with the public board still on screen)
     renderList();
   } catch (e) { /* keep the public render already on screen */ }
 }
