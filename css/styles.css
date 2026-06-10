@@ -252,3 +252,5 @@ body.admin [hidden] { display: none !important; }
 .admin-visibility > summary { cursor: pointer; font-weight: 700; color: var(--accent); font-size: 13px; }
 #region-visibility-list { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
 #region-visibility-list label { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+
+.auth-note { font-size: 12px; color: var(--muted); padding: 6px 12px; }

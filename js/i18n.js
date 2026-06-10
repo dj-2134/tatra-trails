@@ -36,6 +36,12 @@ export const DICT = {
     sk: "Údaje o chodníkoch nie sú momentálne dostupné.",
   },
   "search.noMatches": { en: "No matches", sk: "Žiadne výsledky" },
+  "auth.signIn": { en: "Sign in", sk: "Prihlásiť sa" },
+  "auth.signOut": { en: "Sign out", sk: "Odhlásiť sa" },
+  "auth.guest": {
+    en: "Signed in — you're not on the guest list, showing public trails only.",
+    sk: "Prihlásený – nie ste na zozname hostí, zobrazujú sa len verejné trasy.",
+  },
 };
 
 // Look up a key in `lang`; fall back to English, then to the key itself.

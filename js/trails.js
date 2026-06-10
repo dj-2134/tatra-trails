@@ -1,5 +1,6 @@
 // js/trails.js — DOM/Leaflet orchestration (thin, impure binding around the pure modules).
-import { fetchHikes, fetchRegions } from "./data.js";
+import { fetchHikes, fetchRegions, fetchAllowedSelf } from "./data.js";
+import { hasAuthRedirect, hasStoredSession, signInWithGoogle, getSession, signOut } from "./auth-public.js";
 import { groupHikesByRegion, publicVisibleHikes } from "./regions.js";
 import { prepareHikes } from "./hikes.js";
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js";
@@ -12,6 +13,8 @@ import { searchHikes } from "./search.js";
 let MAP = null;
 let HIKES = [];
 let REGIONS = [];
+let SHOW_ALL = false;
+let SESSION = null;
 let ROUTE_LAYER = null;
 let SELECTED = null; // slug
 
@@ -82,6 +85,7 @@ export async function initTrails(map) {
     renderList();
     if (SELECTED) openDetail(SELECTED);
   });
+  setupAuth();
 }
 
 function initSearch() {
@@ -102,7 +106,7 @@ function initSearch() {
     const q = input.value;
     box.innerHTML = "";
     if (!q.trim()) { close(); return; }
-    matches = searchHikes(publicVisibleHikes(HIKES, REGIONS), q).slice(0, 8);
+    matches = searchHikes(publicVisibleHikes(HIKES, REGIONS, SHOW_ALL), q).slice(0, 8);
     if (!matches.length) {
       const empty = document.createElement("div");
       empty.className = "search-empty";
@@ -165,7 +169,7 @@ function renderList() {
   if (!list) return;
   list.innerHTML = "";
   const u = units();
-  const model = groupHikesByRegion(HIKES, REGIONS);
+  const model = groupHikesByRegion(HIKES, REGIONS, SHOW_ALL);
   for (const { region, bands } of model) {
     const count = bands.reduce((n, b) => n + b.hikes.length, 0);
     const regionEl = document.createElement("details");
@@ -336,4 +340,55 @@ function deselect() {
   const list = document.getElementById("hike-list");
   if (panel) { panel.hidden = true; panel.innerHTML = ""; }
   if (list) list.hidden = false;
+}
+
+const SB = { url: SUPABASE_URL, key: SUPABASE_PUBLISHABLE_KEY };
+
+function authBtn() { return document.getElementById("auth-toggle"); }
+
+function setAuthLabel() {
+  const btn = authBtn();
+  if (btn) btn.textContent = t(DICT, SESSION ? "auth.signOut" : "auth.signIn", lang());
+}
+
+function setupAuth() {
+  const btn = authBtn();
+  if (btn) {
+    setAuthLabel();
+    btn.addEventListener("click", async () => {
+      try {
+        if (SESSION) { await signOut(); window.location.reload(); }
+        else { await signInWithGoogle(); } // redirects to Google
+      } catch (e) { /* leave anon */ }
+    });
+  }
+  document.addEventListener("tt:langchange", setAuthLabel);
+  // Only touch supabase-js when returning from OAuth or already signed in (keeps anon dependency-free).
+  if (hasAuthRedirect() || hasStoredSession()) enterAuthenticated();
+}
+
+async function enterAuthenticated() {
+  let session;
+  try { session = await getSession(); } catch (e) { return; }
+  if (!session) return;
+  SESSION = session;
+  setAuthLabel();
+  const token = session.access_token;
+  let allowed = false;
+  try { allowed = (await fetchAllowedSelf(SB, fetch, token)).length > 0; } catch (e) { allowed = false; }
+  SHOW_ALL = allowed;
+  const note = document.getElementById("auth-note");
+  if (note) {
+    if (allowed) { note.hidden = true; note.textContent = ""; }
+    else { note.hidden = false; note.textContent = t(DICT, "auth.guest", lang()); }
+  }
+  try {
+    const [hrows, rrows] = await Promise.all([
+      fetchHikes(SB, fetch, token),
+      fetchRegions(SB, fetch, token),
+    ]);
+    HIKES = prepareHikes(hrows, todayInBratislava());
+    REGIONS = rrows;
+    renderList();
+  } catch (e) { /* keep the public render already on screen */ }
 }
