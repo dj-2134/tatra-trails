@@ -74,10 +74,7 @@ create policy "admin write regions"      on regions      for all to authenticate
 create policy "admin write hike_regions" on hike_regions for all to authenticated using (true) with check (true);
 
 -- Increment D1: role-scoped read policies (anon = public only; authenticated = all).
-create policy "authed read hikes"        on hikes        for select to authenticated using (true);
-create policy "authed read closures"     on closures     for select to authenticated using (true);
-create policy "authed read regions"      on regions      for select to authenticated using (true);
-create policy "authed read hike_regions" on hike_regions for select to authenticated using (true);
+-- D1 authed read policies replaced by D2a below.
 
 create policy "anon read regions" on regions for select to anon
   using (regions.is_public);
@@ -86,4 +83,38 @@ create policy "anon read hike_regions" on hike_regions for select to anon
 create policy "anon read hikes" on hikes for select to anon
   using (hikes.is_public and exists (select 1 from hike_regions hr where hr.hike_id = hikes.id));
 create policy "anon read closures" on closures for select to anon
+  using (exists (select 1 from hikes h where h.id = closures.hike_id));
+
+-- Increment D2a: friend/owner allowlist + helper.
+create table if not exists allowed_viewers (
+  email    text primary key,
+  role     text not null default 'friend' check (role in ('owner','friend')),
+  added_at timestamptz not null default now()
+);
+alter table allowed_viewers enable row level security;
+
+create or replace function public.is_owner()
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.allowed_viewers
+                 where email = (auth.jwt() ->> 'email') and role = 'owner');
+$$;
+revoke execute on function public.is_owner() from anon, public;
+grant execute on function public.is_owner() to authenticated;
+
+create policy "self read allowed_viewers" on allowed_viewers for select to authenticated
+  using (email = (auth.jwt() ->> 'email'));
+create policy "owner manage allowed_viewers" on allowed_viewers for all to authenticated
+  using (public.is_owner()) with check (public.is_owner());
+
+-- Authenticated reads: public OR everything-if-allowlisted.
+create policy "authed read regions" on regions for select to authenticated
+  using (regions.is_public
+         or exists (select 1 from allowed_viewers av where av.email = (auth.jwt() ->> 'email')));
+create policy "authed read hike_regions" on hike_regions for select to authenticated
+  using (exists (select 1 from regions r where r.id = hike_regions.region_id and r.is_public)
+         or exists (select 1 from allowed_viewers av where av.email = (auth.jwt() ->> 'email')));
+create policy "authed read hikes" on hikes for select to authenticated
+  using ((hikes.is_public and exists (select 1 from hike_regions hr where hr.hike_id = hikes.id))
+         or exists (select 1 from allowed_viewers av where av.email = (auth.jwt() ->> 'email')));
+create policy "authed read closures" on closures for select to authenticated
   using (exists (select 1 from hikes h where h.id = closures.hike_id));
