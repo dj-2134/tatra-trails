@@ -24,6 +24,7 @@ function units() {
 }
 
 function regionName(region) {
+  if (!region) return "";
   return lang() === "sk" ? (region.name_sk || region.name_en) : (region.name_en || region.name_sk);
 }
 
@@ -62,10 +63,13 @@ export async function initTrails(map) {
     renderError();
     return;
   }
+  // Regions drive the entire list grouping, so a regions-fetch failure is fatal — show the
+  // error state like a hikes-fetch failure, rather than silently rendering an empty board.
   try {
     REGIONS = await fetchRegions({ url: SUPABASE_URL, key: SUPABASE_PUBLISHABLE_KEY });
   } catch (e) {
-    REGIONS = [];
+    renderError();
+    return;
   }
   HIKES = prepareHikes(rows, todayInBratislava());
   renderList();
