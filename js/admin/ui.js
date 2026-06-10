@@ -130,6 +130,7 @@ async function renderViewers() {
     const rm = document.createElement("button");
     rm.type = "button"; rm.className = "chip admin-danger"; rm.textContent = "✕";
     rm.addEventListener("click", async () => {
+      if (v.role === "owner" && !window.confirm(`Remove owner ${v.email}? This can lock you out of managing viewers and writing (re-seed via SQL to recover).`)) return;
       try { await removeViewer(v.email); await renderViewers(); }
       catch (e) { alert(errorText(e)); }
     });
