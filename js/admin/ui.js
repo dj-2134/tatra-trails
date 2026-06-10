@@ -127,14 +127,23 @@ async function renderViewers() {
     row.className = "admin-viewer-row";
     const label = document.createElement("span");
     label.textContent = `${v.email} — ${v.role}`;
-    const rm = document.createElement("button");
-    rm.type = "button"; rm.className = "chip admin-danger"; rm.textContent = "✕";
-    rm.addEventListener("click", async () => {
-      if (v.role === "owner" && !window.confirm(`Remove owner ${v.email}? This can lock you out of managing viewers and writing (re-seed via SQL to recover).`)) return;
-      try { await removeViewer(v.email); await renderViewers(); }
-      catch (e) { alert(errorText(e)); }
-    });
-    row.append(label, rm);
+    row.append(label);
+    if (v.role === "owner") {
+      // Owners are not removable from the UI (avoids accidental lockout) — manage owners via SQL.
+      const lock = document.createElement("span");
+      lock.className = "admin-viewer-owner";
+      lock.textContent = "owner";
+      lock.title = "Owner — manage via SQL to avoid accidental lockout";
+      row.append(lock);
+    } else {
+      const rm = document.createElement("button");
+      rm.type = "button"; rm.className = "viewer-remove"; rm.textContent = "✕"; rm.title = `Remove ${v.email}`;
+      rm.addEventListener("click", async () => {
+        try { await removeViewer(v.email); await renderViewers(); }
+        catch (e) { alert(errorText(e)); }
+      });
+      row.append(rm);
+    }
     wrap.appendChild(row);
   }
 }
