@@ -43,6 +43,10 @@
     <aside class="admin-list-pane">
       <button id="new-hike" class="chip" type="button">+ New hike</button>
       <div id="admin-hike-list" class="admin-hike-list" aria-label="Hikes"></div>
+      <details class="admin-visibility">
+        <summary>Public regions</summary>
+        <div id="region-visibility-list"></div>
+      </details>
     </aside>
 
     <section id="editor-pane" class="admin-editor" hidden>
@@ -80,6 +84,11 @@
           </label>
           <span id="f-stats-hint" class="admin-msg"></span>
         </div>
+        <fieldset class="admin-regions">
+          <legend>Regions (pick at least one)</legend>
+          <input id="f-region-filter" placeholder="Filter ranges…" />
+          <div id="f-region-list" class="admin-region-list" role="group" aria-label="Regions"></div>
+        </fieldset>
       </form>
 
       <section class="admin-closures">

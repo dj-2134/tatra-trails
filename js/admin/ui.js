@@ -1,9 +1,12 @@
 // js/admin/ui.js — admin page glue: wires auth + store + gpx + validate + status into the
 // two-pane DOM. Thin/impure binding layer (manually verified), like trails.js in Phase 1.
 import { getSession, sendMagicLink, signOut, onAuthChange } from "./auth.js";
-import { listHikes, upsertHike, deleteHike, upsertClosure, deleteClosure } from "./store.js";
+import { listHikes, upsertHike, deleteHike, upsertClosure, deleteClosure,
+         listRegions, setHikeRegions, setRegionPublic } from "./store.js";
 import { gpxToLineString } from "./gpx.js";
-import { validateHike, validateClosure } from "./validate.js";
+import { validateHike, validateClosure, validateRegionSelection } from "./validate.js";
+import { suggestRegions } from "../region-geo.js";
+import { normalizeText } from "../search.js";
 import { computeStatus } from "../status.js";
 import { initMap } from "../map.js";
 import { routeLayer } from "../route-layer.js";
@@ -11,6 +14,7 @@ import { gpxStats } from "./gpx.js";
 import { estimateDurationMin } from "../stats.js";
 
 let HIKES = [];
+let REGIONS = [];
 let state = null; // editor state: { id, isNew, geometry, closures:[{...,_deleted?}] }
 let ADMIN_MAP = null;
 let ADMIN_ROUTE = null;
@@ -33,6 +37,7 @@ function showAdmin() { $("login-view").hidden = true; $("admin-view").hidden = f
 // ---- left pane ----
 async function refreshList() {
   HIKES = await listHikes();
+  REGIONS = await listRegions();
   const list = $("admin-hike-list");
   list.innerHTML = "";
   for (const h of HIKES) {
@@ -44,6 +49,8 @@ async function refreshList() {
     row.addEventListener("click", () => { editHike(h); markSelected(h.slug); });
     list.appendChild(row);
   }
+  renderRegionPicker();
+  renderVisibility();
 }
 
 function markSelected(slug) {
@@ -52,12 +59,68 @@ function markSelected(slug) {
   }
 }
 
+// ---- region multi-select ----
+function renderRegionPicker() {
+  const list = $("f-region-list");
+  if (!list) return;
+  list.innerHTML = "";
+  for (const r of REGIONS) {
+    const label = document.createElement("label");
+    label.dataset.norm = normalizeText(`${r.name_en} ${r.name_sk}`);
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.value = String(r.id);
+    label.append(cb, document.createTextNode(` ${r.name_en}${r.kraj ? ` (${r.kraj})` : ""}`));
+    list.appendChild(label);
+  }
+  $("f-region-filter").value = "";
+}
+
+function filterRegionPicker(q) {
+  const norm = normalizeText(q);
+  for (const label of $("f-region-list").children) {
+    label.classList.toggle("hidden", norm !== "" && !label.dataset.norm.includes(norm));
+  }
+}
+
+function getSelectedRegionIds() {
+  return [...$("f-region-list").querySelectorAll("input:checked")].map((cb) => Number(cb.value));
+}
+
+function setSelectedRegionIds(ids) {
+  const want = new Set((ids || []).map(Number));
+  for (const cb of $("f-region-list").querySelectorAll("input[type=checkbox]")) {
+    cb.checked = want.has(Number(cb.value));
+  }
+}
+
+// ---- per-region public/private toggles (populated regions only) ----
+function renderVisibility() {
+  const wrap = $("region-visibility-list");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  const populated = new Set(HIKES.flatMap((h) => (h.hike_regions || []).map((x) => x.region_id)));
+  for (const r of REGIONS) {
+    if (!populated.has(r.id)) continue;
+    const label = document.createElement("label");
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = !!r.is_public;
+    cb.addEventListener("change", async () => {
+      try { await setRegionPublic(r.id, cb.checked); r.is_public = cb.checked; }
+      catch (err) { cb.checked = !cb.checked; alert(errorText(err)); }
+    });
+    label.append(cb, document.createTextNode(` ${r.name_en}`));
+    wrap.appendChild(label);
+  }
+}
+
 // ---- editor ----
 function blankHike() {
   return { id: null, isNew: true, slug: "", name_en: "", name_sk: "",
     seasonal_from: "", seasonal_to: "", seasonal_partial: false,
     note_en: "", note_sk: "", ref: "", geometry: null, closures: [],
-    distance_m: null, ascent_m: null, duration_min: null };
+    distance_m: null, ascent_m: null, duration_min: null, region_ids: [] };
 }
 
 function loadEditor(h) {
@@ -79,6 +142,9 @@ function loadEditor(h) {
   $("delete-hike").hidden = h.isNew;
   $("editor-msg").textContent = "";
   renderClosures();
+  setSelectedRegionIds(h.region_ids || []);
+  $("f-region-filter").value = "";
+  filterRegionPicker("");
   updateBadge();
   $("f-distance").value = h.distance_m != null ? (h.distance_m / 1000).toFixed(1) : "";
   $("f-ascent").value = h.ascent_m != null ? h.ascent_m : "";
@@ -100,6 +166,7 @@ function editHike(row) {
     geometry: row.geometry || null,
     closures: (row.closures || []).map((c) => ({ ...c })),
     distance_m: row.distance_m ?? null, ascent_m: row.ascent_m ?? null, duration_min: row.duration_min ?? null,
+    region_ids: (row.hike_regions || []).map((x) => x.region_id),
   });
 }
 
@@ -225,6 +292,8 @@ async function onGpxChange(e) {
     $("f-geom-status").textContent = `✓ ${state.geometry.coordinates.length} points`;
     $("f-stats-hint").textContent = "auto-filled from GPX — edit if needed";
     drawAdminRoute(state.geometry);
+    const suggested = suggestRegions(state.geometry.coordinates, REGIONS);
+    if (suggested.length) setSelectedRegionIds(suggested);
   } catch (err) {
     $("f-geom-status").textContent = `GPX error: ${err.message}`; // geometry + fields unchanged
   }
@@ -243,9 +312,11 @@ function normalizeClosure(c) {
 async function save() {
   const msg = $("editor-msg");
   const hike = formToHike();
+  const regionIds = getSelectedRegionIds();
   const live = state.closures.filter((c) => !c._deleted);
   const errs = validateHike(hike);
   for (const c of live) errs.push(...validateClosure(c));
+  errs.push(...validateRegionSelection(regionIds));
   if (errs.length) { msg.textContent = errs[0]; return; } // validate before any request
 
   try {
@@ -255,6 +326,7 @@ async function save() {
       const savedC = await upsertClosure(saved.id, normalizeClosure(c));
       if (savedC && savedC.id) c.id = savedC.id; // capture id so a retry updates, not re-inserts
     }
+    await setHikeRegions(saved.id, regionIds);
     msg.textContent = "Saved.";
     await refreshList();
     const fresh = HIKES.find((h) => h.slug === saved.slug);
@@ -297,6 +369,7 @@ async function boot() {
   $("save-hike").addEventListener("click", save);
   $("delete-hike").addEventListener("click", remove);
   $("f-gpx").addEventListener("change", onGpxChange);
+  $("f-region-filter").addEventListener("input", (e) => filterRegionPicker(e.target.value));
   ["f-seasonal-from", "f-seasonal-to", "f-seasonal-partial"].forEach((id) => $(id).addEventListener("input", updateBadge));
 
   // onAuthChange fires with the INITIAL_SESSION on subscribe, and we also probe getSession()
