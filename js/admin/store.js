@@ -9,7 +9,8 @@ export async function listHikes() {
     .select(
       "id,slug,name_en,name_sk,geometry,seasonal_from,seasonal_to,seasonal_partial,note_en,note_sk,ref," +
         "distance_m,ascent_m,duration_min," +
-        "closures(id,from_date,to_date,partial,reason_en,reason_sk,source)"
+        "closures(id,from_date,to_date,partial,reason_en,reason_sk,source)," +
+        "hike_regions(region_id)"
     )
     .order("name_en");
   if (error) throw error;
@@ -46,5 +47,34 @@ export async function upsertClosure(hikeId, closure) {
 
 export async function deleteClosure(id) {
   const { error } = await supabase.from("closures").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// All regions, east→west (centroid_lon desc) for the picker + visibility list.
+export async function listRegions() {
+  const { data, error } = await supabase
+    .from("regions")
+    .select("id,slug,name_en,name_sk,kraj,centroid_lon,centroid_lat,is_public")
+    .order("centroid_lon", { ascending: false, nullsFirst: false });
+  if (error) throw error;
+  return data || [];
+}
+
+// Replace a hike's region memberships with exactly regionIds (delete-all then insert).
+export async function setHikeRegions(hikeId, regionIds) {
+  const { error: delErr } = await supabase.from("hike_regions").delete().eq("hike_id", hikeId);
+  if (delErr) throw delErr;
+  const rows = (regionIds || []).map((region_id) => ({ hike_id: hikeId, region_id }));
+  if (rows.length) {
+    const { error: insErr } = await supabase.from("hike_regions").insert(rows);
+    if (insErr) throw insErr;
+  }
+}
+
+export async function setRegionPublic(regionId, isPublic) {
+  const { error } = await supabase
+    .from("regions")
+    .update({ is_public: !!isPublic, updated_at: new Date().toISOString() })
+    .eq("id", regionId);
   if (error) throw error;
 }
