@@ -4,12 +4,28 @@
 const SELECT =
   "slug,name_en,name_sk,geometry,seasonal_from,seasonal_to,seasonal_partial,note_en,note_sk,ref," +
   "distance_m,ascent_m,duration_min," +
-  "closures(from_date,to_date,partial,reason_en,reason_sk,source)";
+  "closures(from_date,to_date,partial,reason_en,reason_sk,source)," +
+  "hike_regions(region_id)";
+
+const REGION_SELECT = "id,slug,name_en,name_sk,kraj,centroid_lon,centroid_lat,is_public";
 
 // config: { url, key } ; fetchImpl defaults to the global fetch (browser).
 export async function fetchHikes({ url, key }, fetchImpl = fetch) {
   const base = url.replace(/\/+$/, ""); // tolerate a trailing slash in the configured URL
   const endpoint = `${base}/rest/v1/hikes?select=${encodeURIComponent(SELECT)}`;
+  const res = await fetchImpl(endpoint, {
+    // Supabase publishable keys must go on the apikey header ONLY; sent as a
+    // Bearer token they are parsed as a JWT and rejected ("Invalid JWT").
+    headers: { apikey: key },
+  });
+  if (!res.ok) throw new Error(`Supabase request failed: ${res.status}`);
+  return res.json();
+}
+
+// All regions (read-only). Same apikey-header rule as fetchHikes.
+export async function fetchRegions({ url, key }, fetchImpl = fetch) {
+  const base = url.replace(/\/+$/, ""); // tolerate a trailing slash in the configured URL
+  const endpoint = `${base}/rest/v1/regions?select=${encodeURIComponent(REGION_SELECT)}`;
   const res = await fetchImpl(endpoint, {
     // Supabase publishable keys must go on the apikey header ONLY; sent as a
     // Bearer token they are parsed as a JWT and rejected ("Invalid JWT").

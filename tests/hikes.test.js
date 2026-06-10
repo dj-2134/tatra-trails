@@ -43,6 +43,12 @@ test("prepareHikes tolerates null/empty input", () => {
   assert.deepEqual(prepareHikes([], today), []);
 });
 
+test("prepareHikes: maps hike_regions to region_ids", () => {
+  const rows = [{ slug: "a", geometry: { type: "LineString", coordinates: [[0,0],[1,1]] }, hike_regions: [{ region_id: 1 }, { region_id: 5 }] }];
+  const [h] = prepareHikes(rows, { iso: "2026-06-10", mmdd: "06-10" });
+  assert.deepEqual(h.region_ids, [1, 5]);
+});
+
 test("prepareHikes: maps stat fields and falls back to geometry distance", () => {
   const geom = { type: "LineString", coordinates: [[20, 49], [20, 50]] }; // ~111 km
   const [a, b] = prepareHikes([

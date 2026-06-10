@@ -1,7 +1,7 @@
 // tests/data.test.js
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fetchHikes } from "../js/data.js";
+import { fetchHikes, fetchRegions } from "../js/data.js";
 
 test("fetchHikes hits PostgREST with the publishable key and returns parsed rows", async () => {
   let captured;
@@ -35,4 +35,16 @@ test("fetchHikes requests the stat columns", async () => {
   const stub = async (url) => { captured = url; return { ok: true, status: 200, json: async () => [] }; };
   await fetchHikes({ url: "https://p.supabase.co", key: "K" }, stub);
   assert.match(decodeURIComponent(captured), /distance_m,ascent_m,duration_min/);
+});
+
+test("fetchRegions: hits /regions with the apikey header", async () => {
+  let seen = null;
+  const fakeFetch = async (url, opts) => {
+    seen = { url, opts };
+    return { ok: true, status: 200, json: async () => [{ id: 1, slug: "vysoke-tatry" }] };
+  };
+  const out = await fetchRegions({ url: "https://x.supabase.co/", key: "K" }, fakeFetch);
+  assert.ok(seen.url.includes("/rest/v1/regions?select="));
+  assert.equal(seen.opts.headers.apikey, "K");
+  assert.deepEqual(out, [{ id: 1, slug: "vysoke-tatry" }]);
 });
