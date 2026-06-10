@@ -96,3 +96,11 @@ export async function removeViewer(email) {
   const { error } = await supabase.from("allowed_viewers").delete().eq("email", email);
   if (error) throw error;
 }
+
+// Is the signed-in user the owner? Reuses the DB is_owner() function (the same source of truth as RLS),
+// so the admin UI gate can never disagree with what the database enforces.
+export async function isOwner() {
+  const { data, error } = await supabase.rpc("is_owner");
+  if (error) throw error;
+  return data === true;
+}

@@ -3,7 +3,7 @@
 import { getSession, sendMagicLink, signOut, onAuthChange } from "./auth.js";
 import { listHikes, upsertHike, deleteHike, upsertClosure, deleteClosure,
          listRegions, setHikeRegions, setRegionPublic,
-         listViewers, addViewer, removeViewer } from "./store.js";
+         listViewers, addViewer, removeViewer, isOwner } from "./store.js";
 import { gpxToLineString, gpxStats, gpxName } from "./gpx.js";
 import { validateHike, validateClosure, validateRegionSelection } from "./validate.js";
 import { suggestRegions } from "../region-geo.js";
@@ -33,6 +33,12 @@ function showLogin() {
   $("admin-hike-list").innerHTML = ""; $("editor-pane").hidden = true; // drop any signed-in content
 }
 function showAdmin() { $("login-view").hidden = true; $("admin-view").hidden = false; $("sign-out").hidden = false; }
+// Signed in, but not the owner: hide the admin UI, show a message + sign-out (so they can switch accounts).
+function showNotOwner() {
+  $("login-view").hidden = false; $("admin-view").hidden = true; $("sign-out").hidden = false;
+  $("admin-hike-list").innerHTML = ""; $("editor-pane").hidden = true;
+  $("login-msg").textContent = "This account isn't the owner. Sign out and use the owner account.";
+}
 
 // ---- left pane ----
 async function refreshList() {
@@ -436,11 +442,16 @@ async function boot() {
   // onAuthChange fires with the INITIAL_SESSION on subscribe, and we also probe getSession()
   // explicitly; the `entered` guard makes refreshList run once per sign-in, not twice on boot.
   let entered = false;
-  const enter = (session) => {
-    if (session) { showAdmin(); if (!entered) { entered = true; refreshList(); } }
-    else { entered = false; showLogin(); }
+  const enter = async (session) => {
+    if (!session) { entered = false; showLogin(); return; }
+    // Admin UI is owner-only. Reads/writes are RLS-guarded regardless, but don't show the editor chrome
+    // to a signed-in friend / non-owner.
+    let owner = false;
+    try { owner = await isOwner(); } catch (e) { owner = false; }
+    if (owner) { showAdmin(); if (!entered) { entered = true; refreshList(); } }
+    else { entered = false; showNotOwner(); }
   };
-  onAuthChange(enter);
+  onAuthChange((session) => { enter(session); });
   enter(await getSession());
 }
 
