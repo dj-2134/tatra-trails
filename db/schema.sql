@@ -8,6 +8,7 @@ create table if not exists hikes (
   seasonal_from text check (seasonal_from ~ '^[0-9][0-9]-[0-9][0-9]$'),
   seasonal_to   text check (seasonal_to   ~ '^[0-9][0-9]-[0-9][0-9]$'),
   seasonal_partial boolean not null default false,
+  is_public boolean not null default true,
   note_en text,
   note_sk text,
   ref text,
