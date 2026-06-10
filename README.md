@@ -87,6 +87,44 @@ In Supabase Studio → SQL Editor, run the scripts **in order**:
 ### Visibility caveat
 Public/private is **display-level only** in this increment. The public list and search hide non-public regions and hikes, but all rows remain reachable via the anon API. Hard server-side RLS enforcement (withholding private rows at the database level) is a later increment.
 
+## Friends access (Google sign-in, Increment D2)
+
+Invited friends can sign in with Google on the public board and see all regions and hikes,
+including those marked private. Everyone else (anonymous) sees only public content.
+Access is enforced by Supabase RLS — the anonymous API never returns private rows.
+
+### Enable Google OAuth (one-time)
+
+1. In [Google Cloud Console](https://console.cloud.google.com), create an OAuth 2.0 **Web** client.
+   Add the Supabase auth callback as an authorised redirect URI:
+   ```
+   https://<your-project-ref>.supabase.co/auth/v1/callback
+   ```
+2. In Supabase → Authentication → Providers → Google: enable Google, paste the client ID and secret.
+3. In Supabase → Authentication → URL Configuration → Redirect URLs, add your site origins, e.g.:
+   ```
+   http://localhost:8000
+   https://<your-pages-domain>
+   ```
+
+### Seed the owner and invite friends
+
+1. **Seed the owner:** `db/friends-access.sql` inserts the founder's email with role `owner`
+   (edit the placeholder email before running). Run it in Supabase Studio → SQL Editor
+   **after** `db/enforce-visibility-rls.sql` and **before** re-running `db/admin-rls.sql`.
+2. **Invite friends:** open `/admin.html` → **Viewers**, add a friend's Google email (role `friend`).
+   They click **Sign in** on the board, authenticate with Google, and immediately see everything.
+   A signed-in user whose email is *not* on the list sees only public content — same as anonymous.
+
+### How it works
+
+- **Anonymous visitors** — no sign-in, no dependency on `supabase-js`, the board stays
+  fully dependency-free for them.
+- **Signed-in visitors** — `supabase-js` loads only when the user clicks **Sign in**. After
+  the OAuth redirect the board re-fetches with the session JWT, and RLS returns public + private rows
+  for allowlisted users.
+- **Writes** remain owner-only (enforced by `db/admin-rls.sql`); friends have read-only access.
+
 ## Attribution
 Map tiles © Seznam.cz a.s. and others (Mapy.com). Later increments add trail data from
 OpenStreetMap (© OpenStreetMap contributors, ODbL) and closure rules from TANAP (tanap.org).
