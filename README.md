@@ -82,6 +82,7 @@ In Supabase Studio → SQL Editor, run the scripts **in order**:
 - Every hike must have **≥ 1 region** assigned via the region multi-select in `admin.html`.
 - **GPX upload pre-suggests** the nearest region(s) by centroid distance — confirm or adjust before saving.
 - Use the **Public regions** toggles to publish a region once it has hikes assigned.
+- Each hike also has its own **Public** toggle in the hike editor. A hike appears on the public board only when **both** its own flag is public **and** it belongs to ≥ 1 public region. New hikes default to public.
 
 ### Visibility caveat
 Public/private is **display-level only** in this increment. The public list and search hide non-public regions and hikes, but all rows remain reachable via the anon API. Hard server-side RLS enforcement (withholding private rows at the database level) is a later increment.
