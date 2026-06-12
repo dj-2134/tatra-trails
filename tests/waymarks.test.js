@@ -1,7 +1,7 @@
 // tests/waymarks.test.js
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { nearestPointIndex, segmentPolylines } from "../js/waymarks.js";
+import { nearestPointIndex, segmentPolylines, closureStretch, closureMarkerPositions } from "../js/waymarks.js";
 
 // A simple 5-vertex west→east line along latitude 49: indices 0..4 at lon 20.00..20.04.
 const COORDS = [[20.00, 49], [20.01, 49], [20.02, 49], [20.03, 49], [20.04, 49]];
@@ -65,4 +65,36 @@ test("segmentPolylines: normalization — unknown color→none, unknown style→
   assert.equal(out[0].style, "dashed"); // none is ALWAYS dashed (overrides solid)
   const solidRed = segmentPolylines(GEOM, [{ color: "red", style: "wavy" }]);
   assert.equal(solidRed[0].style, "solid");
+});
+
+test("closureStretch: slices between anchors, reversed clicks normalized", () => {
+  const fwd = closureStretch(GEOM, [20.01, 49], [20.03, 49]);
+  assert.deepEqual(fwd, COORDS.slice(1, 4));
+  const rev = closureStretch(GEOM, [20.03, 49], [20.01, 49]);
+  assert.deepEqual(rev, COORDS.slice(1, 4)); // same stretch, regardless of click order
+});
+
+test("closureStretch: null on invalid input or same-vertex anchors", () => {
+  assert.equal(closureStretch(null, [20.01, 49], [20.03, 49]), null);
+  assert.equal(closureStretch(GEOM, null, [20.03, 49]), null);
+  assert.equal(closureStretch(GEOM, [20.02, 49], [20.0201, 49]), null); // both snap to vertex 2
+});
+
+test("closureMarkerPositions: at least one marker (midpoint) for a short stretch", () => {
+  const out = closureMarkerPositions(COORDS.slice(0, 2), { spacingM: 5000 });
+  assert.equal(out.length, 1); // spacing larger than the stretch → midpoint only
+});
+
+test("closureMarkerPositions: spacing produces multiple markers, capped at 15", () => {
+  // COORDS spans ~2.9 km; 400 m spacing → ~7 markers
+  const out = closureMarkerPositions(COORDS, { spacingM: 400 });
+  assert.ok(out.length >= 5 && out.length <= 9, `got ${out.length}`);
+  for (const p of out) assert.ok(Array.isArray(p) && p.length === 2);
+  const capped = closureMarkerPositions(COORDS, { spacingM: 1 });
+  assert.equal(capped.length, 15); // hard cap
+});
+
+test("closureMarkerPositions: empty/short input → empty array", () => {
+  assert.deepEqual(closureMarkerPositions(null), []);
+  assert.deepEqual(closureMarkerPositions([[20, 49]]), []);
 });

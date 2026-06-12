@@ -61,3 +61,34 @@ export function segmentPolylines(geometry, waymarkSegments) {
   }
   return out.length ? out : [all];
 }
+
+// The closed stretch between two stored anchors, normalized so click order doesn't matter.
+// Returns [lon,lat][] or null (invalid input / both anchors on the same vertex).
+export function closureStretch(geometry, from, to) {
+  if (!validGeometry(geometry) || !Array.isArray(from) || !Array.isArray(to)) return null;
+  const coords = geometry.coordinates;
+  let a = nearestPointIndex(coords, from);
+  let b = nearestPointIndex(coords, to);
+  if (a > b) [a, b] = [b, a];
+  if (a === b) return null;
+  return coords.slice(a, b + 1);
+}
+
+// Marker positions along a stretch: one per ~spacingM meters, ≥1 (the midpoint), ≤15
+// (a 30 km seasonal closure must not carpet the map). Walks cumulative distance and
+// emits the vertex that crosses each next multiple of spacingM.
+export function closureMarkerPositions(stretchCoords, { spacingM = 400 } = {}) {
+  if (!Array.isArray(stretchCoords) || stretchCoords.length < 2) return [];
+  const out = [];
+  let walked = 0;
+  let next = spacingM;
+  for (let i = 1; i < stretchCoords.length && out.length < 15; i++) {
+    walked += haversineMeters(stretchCoords[i - 1], stretchCoords[i]);
+    while (walked >= next && out.length < 15) {
+      out.push(stretchCoords[i]);
+      next += spacingM;
+    }
+  }
+  if (out.length === 0) out.push(stretchCoords[Math.floor(stretchCoords.length / 2)]);
+  return out;
+}
