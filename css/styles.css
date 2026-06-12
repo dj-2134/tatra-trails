@@ -233,11 +233,27 @@ body.admin [hidden] { display: none !important; }
   height: 420px;
   min-height: 240px;
   max-height: 80vh;
-  resize: vertical;
-  overflow: hidden;
   border: 1px solid var(--chrome-border);
-  border-radius: var(--radius);
+  border-radius: var(--radius) var(--radius) 0 0;
+  margin-bottom: 0;
+}
+/* Drag handle under the admin map — native CSS resize can't work on a Leaflet
+   container (Leaflet preventDefaults every mousedown for map panning). */
+.map-resize-handle {
+  height: 14px;
   margin-bottom: 12px;
+  border: 1px solid var(--chrome-border);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  cursor: ns-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 9px;
+  letter-spacing: 2px;
+  user-select: none;
+  touch-action: none;
 }
 .admin-stats { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
 .admin-hm { display: inline-flex; align-items: center; gap: 4px; }

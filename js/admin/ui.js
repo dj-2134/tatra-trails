@@ -521,6 +521,28 @@ function ensureMap() {
     ADMIN_MAP = initMap("admin-map");
     ADMIN_MAP.on("click", onPreviewClick);
     new ResizeObserver(() => ADMIN_MAP && ADMIN_MAP.invalidateSize()).observe($("admin-map"));
+
+    // Drag-to-resize: native CSS resize is swallowed by Leaflet's mousedown preventDefault,
+    // so the handle below the map drives the height; the ResizeObserver invalidates tiles.
+    const mapEl = $("admin-map");
+    const handle = $("map-resize");
+    handle.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      handle.setPointerCapture(e.pointerId);
+      const startY = e.clientY;
+      const startH = mapEl.getBoundingClientRect().height;
+      const onMove = (ev) => {
+        const h = Math.max(240, Math.min(window.innerHeight * 0.8, startH + (ev.clientY - startY)));
+        mapEl.style.height = `${h}px`;
+      };
+      const onUp = (ev) => {
+        handle.releasePointerCapture(ev.pointerId);
+        handle.removeEventListener("pointermove", onMove);
+        handle.removeEventListener("pointerup", onUp);
+      };
+      handle.addEventListener("pointermove", onMove);
+      handle.addEventListener("pointerup", onUp);
+    });
   }
   ADMIN_MAP.invalidateSize(); // the editor pane was hidden until now
 }
