@@ -6,8 +6,9 @@ const ASCENT_MIN_PER_M = 0.1; // 1 hour per 600 m of ascent (60 / 600)
 
 const toRad = (deg) => (deg * Math.PI) / 180;
 
-// Great-circle distance between two [lon, lat] points, in meters.
-function haversineMeters([lon1, lat1], [lon2, lat2]) {
+// Great-circle distance between two [lon, lat] points, in meters. Exported for reuse
+// (route-endpoints.js loop detection).
+export function haversineMeters([lon1, lat1], [lon2, lat2]) {
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
   const a = Math.sin(dLat / 2) ** 2 +
