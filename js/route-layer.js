@@ -4,7 +4,7 @@
 // it to a map, fits bounds, and removes it.
 import { routeEndpoints } from "./route-endpoints.js";
 
-const FLAG_W = 30, FLAG_H = 36;     // icon box in px
+const FLAG_W = 30, FLAG_H = 40;     // icon box in px (taller than the art so the knob at y≈38 isn't clipped)
 const ANCHOR_X = 4, ANCHOR_Y = 34;  // pole base inside the box — sits ON the endpoint
 
 const GREEN = "#2e7d32", SLATE = "#37474f";
@@ -23,8 +23,8 @@ function flagSvg(kind) {
   } else {
     // Checkered finish flag; the loop variant ("startEnd") keeps the green pole.
     cloth =
-      `<rect x="4" y="6" width="22" height="13" fill="#fff" stroke="${poleColor}" stroke-width="1.5"/>` +
-      `<rect x="4" y="6" width="5.5" height="6.5" fill="${SLATE}"/><rect x="15" y="6" width="5.5" height="6.5" fill="${SLATE}"/>` +
+      `<rect x="${ANCHOR_X}" y="6" width="22" height="13" fill="#fff" stroke="${poleColor}" stroke-width="1.5"/>` +
+      `<rect x="${ANCHOR_X}" y="6" width="5.5" height="6.5" fill="${SLATE}"/><rect x="15" y="6" width="5.5" height="6.5" fill="${SLATE}"/>` +
       `<rect x="9.5" y="12.5" width="5.5" height="6.5" fill="${SLATE}"/><rect x="20.5" y="12.5" width="5.5" height="6.5" fill="${SLATE}"/>`;
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${FLAG_W}" height="${FLAG_H}" viewBox="0 0 ${FLAG_W} ${FLAG_H}">${pole}${cloth}</svg>`;
@@ -38,13 +38,15 @@ function flagMarker([lon, lat], kind, label) {
     iconAnchor: [ANCHOR_X, ANCHOR_Y],
   });
   const m = L.marker([lat, lon], { icon, keyboard: false });
+  // Leaflet sets tooltip content via innerHTML — only pass trusted strings (DICT labels), never user data.
   if (label) m.bindTooltip(label, { direction: "top", offset: [0, -30] });
   return m;
 }
 
 const DEFAULT_LABELS = { start: "Start", end: "End", startEnd: "Start & finish" };
 
-export function routeLayer(geometry, status, { labels = DEFAULT_LABELS } = {}) {
+export function routeLayer(geometry, status, { labels } = {}) {
+  const l = { ...DEFAULT_LABELS, ...labels };
   const casing = L.geoJSON(geometry, {
     style: { className: "trail-casing", weight: 10, opacity: 1, lineCap: "round", lineJoin: "round" },
   });
@@ -55,10 +57,10 @@ export function routeLayer(geometry, status, { labels = DEFAULT_LABELS } = {}) {
   const ends = routeEndpoints(geometry);
   if (ends) {
     if (ends.isLoop) {
-      layers.push(flagMarker(ends.start, "startEnd", labels.startEnd));
+      layers.push(flagMarker(ends.start, "startEnd", l.startEnd));
     } else {
-      layers.push(flagMarker(ends.start, "start", labels.start));
-      layers.push(flagMarker(ends.end, "end", labels.end));
+      layers.push(flagMarker(ends.start, "start", l.start));
+      layers.push(flagMarker(ends.end, "end", l.end));
     }
   }
   return L.featureGroup(layers);
