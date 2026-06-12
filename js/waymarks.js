@@ -94,3 +94,17 @@ export function closureMarkerPositions(stretchCoords, { spacingM = 400 } = {}) {
   if (out.length === 0) out.push(stretchCoords[Math.floor(stretchCoords.length / 2)]);
   return out;
 }
+
+// Deduplicated (color,style) pairs in route order, for the list/detail swatches.
+// "green, dashed green, green again" → two entries, not three.
+export function swatchList(waymarkSegments) {
+  if (!Array.isArray(waymarkSegments)) return [];
+  const seen = new Set();
+  const out = [];
+  for (const seg of waymarkSegments) {
+    const n = normalizeSeg(seg);
+    const key = `${n.color}/${n.style}`;
+    if (!seen.has(key)) { seen.add(key); out.push(n); }
+  }
+  return out;
+}

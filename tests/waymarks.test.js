@@ -1,7 +1,7 @@
 // tests/waymarks.test.js
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { nearestPointIndex, segmentPolylines, closureStretch, closureMarkerPositions } from "../js/waymarks.js";
+import { nearestPointIndex, segmentPolylines, closureStretch, closureMarkerPositions, swatchList } from "../js/waymarks.js";
 
 // A simple 5-vertex west→east line along latitude 49: indices 0..4 at lon 20.00..20.04.
 const COORDS = [[20.00, 49], [20.01, 49], [20.02, 49], [20.03, 49], [20.04, 49]];
@@ -106,4 +106,23 @@ test("closureMarkerPositions: spacing produces multiple deduplicated markers, ca
 test("closureMarkerPositions: empty/short input → empty array", () => {
   assert.deepEqual(closureMarkerPositions(null), []);
   assert.deepEqual(closureMarkerPositions([[20, 49]]), []);
+});
+
+test("swatchList: dedupes repeats but keeps route order of distinct pairs", () => {
+  const segs = [
+    { color: "green", style: "solid", until: [20.01, 49] },
+    { color: "green", style: "dashed", until: [20.02, 49] },
+    { color: "green", style: "solid", until: [20.03, 49] },
+    { color: "none", style: "solid" }, // normalizes to none+dashed
+  ];
+  assert.deepEqual(swatchList(segs), [
+    { color: "green", style: "solid" },
+    { color: "green", style: "dashed" },
+    { color: "none", style: "dashed" },
+  ]);
+});
+
+test("swatchList: empty/invalid input → empty array", () => {
+  assert.deepEqual(swatchList(null), []);
+  assert.deepEqual(swatchList([]), []);
 });
