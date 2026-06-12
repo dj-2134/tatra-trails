@@ -10,6 +10,7 @@ import { routeEndpoints, parkingSearchUrl, trailheadPinUrl } from "./route-endpo
 import { formatDistance, formatAscent, formatDuration } from "./stats-format.js";
 import { formatBandRange } from "./bands.js";
 import { searchHikes } from "./search.js";
+import { swatchList } from "./waymarks.js";
 
 let MAP = null;
 let HIKES = [];
@@ -37,6 +38,29 @@ function statParts(hike) {
   const u = units();
   return [formatDistance(hike.distance_m, u), formatAscent(hike.ascent_m, u), formatDuration(hike.duration_min)]
     .filter(Boolean);
+}
+
+// A strip of small line swatches (solid/dashed, waymark-coloured). Returns null when the
+// hike has no waymark data — callers append nothing.
+function swatchStrip(hike, large = false) {
+  const swatches = swatchList(hike.waymark_segments);
+  if (!swatches.length) return null;
+  const strip = document.createElement("span");
+  strip.className = "wm-strip";
+  for (const s of swatches) {
+    const el = document.createElement("span");
+    el.className = `wm-swatch wm-swatch--${s.color}${s.style === "dashed" ? " wm-swatch--dashed" : ""}${large ? " wm-swatch--lg" : ""}`;
+    el.title = waymarkName(s);
+    strip.appendChild(el);
+  }
+  return strip;
+}
+
+// Localized "zelená prerušovaná" / "green dashed"; `none` has no qualifier (always dashed).
+function waymarkName(s) {
+  const L_ = lang();
+  const color = t(DICT, `waymark.${s.color}`, L_);
+  return s.color !== "none" && s.style === "dashed" ? `${color} ${t(DICT, "waymark.dashed", L_)}` : color;
 }
 
 // Today's date in the Tatras' local timezone. en-CA formats as YYYY-MM-DD.
@@ -214,6 +238,8 @@ function renderRow(hike) {
   badge.className = `status-badge ${hike.status}`;
   badge.textContent = t(DICT, `status.${hike.status}`, lang());
   top.append(name, badge);
+  const swatches = swatchStrip(hike);
+  if (swatches) top.appendChild(swatches);
   row.appendChild(top);
 
   const parts = statParts(hike);
@@ -353,6 +379,17 @@ function openDetail(slug) {
       parking.appendChild(a);
     });
     panel.appendChild(parking);
+  }
+
+  const wmSwatches = swatchStrip(hike, true);
+  if (wmSwatches) {
+    const wm = document.createElement("div");
+    wm.className = "detail-waymarks";
+    const label = document.createElement("strong");
+    label.textContent = `${t(DICT, "detail.waymarks", L_)} `;
+    const names = swatchList(hike.waymark_segments).map((s) => waymarkName(s)).join(" · ");
+    wm.append(label, wmSwatches, document.createTextNode(` ${names}`));
+    panel.appendChild(wm);
   }
 
   for (const c of hike.activeClosures) {

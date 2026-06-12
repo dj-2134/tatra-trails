@@ -32,6 +32,13 @@ export const DICT = {
   "marker.start": { en: "Start", sk: "Štart" },
   "marker.end": { en: "End", sk: "Cieľ" },
   "marker.startEnd": { en: "Start & finish", sk: "Štart a cieľ" },
+  "waymark.red": { en: "red", sk: "červená" },
+  "waymark.blue": { en: "blue", sk: "modrá" },
+  "waymark.green": { en: "green", sk: "zelená" },
+  "waymark.yellow": { en: "yellow", sk: "žltá" },
+  "waymark.none": { en: "unmarked", sk: "neznačené" },
+  "waymark.dashed": { en: "dashed", sk: "prerušovaná" },
+  "detail.waymarks": { en: "Waymarks", sk: "Značenie" },
   "detail.disclaimer": {
     en: "Awareness only. Always verify with TANAP / mountain rescue (HZS) before you go; the absence of a closure here is not a guarantee a trail is open or safe.",
     sk: "Len pre informáciu. Pred túrou si vždy overte stav u TANAP / Horskej záchrannej služby (HZS); chýbajúca uzávera tu neznamená, že chodník je otvorený alebo bezpečný.",

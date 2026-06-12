@@ -169,6 +169,19 @@ path.trail-wm--none   { stroke: #78909c; }
 .closure-x { filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .45)); }
 .closure-x svg { display: block; }
 
+/* Waymark swatches: small line samples (solid bar / dashed bar) in list rows + detail. */
+.wm-strip { display: inline-flex; gap: 4px; align-items: center; margin-left: 6px; }
+.wm-swatch { display: inline-block; width: 14px; height: 4px; border-radius: 2px; background: var(--wm-c); }
+.wm-swatch--lg { width: 22px; height: 5px; }
+.wm-swatch--dashed { background: repeating-linear-gradient(90deg, var(--wm-c) 0 4px, transparent 4px 7px); }
+.wm-swatch--red    { --wm-c: #e53935; }
+.wm-swatch--blue   { --wm-c: #1565c0; }
+.wm-swatch--green  { --wm-c: #2e7d32; }
+.wm-swatch--yellow { --wm-c: #f9a825; }
+.wm-swatch--none   { --wm-c: #78909c; }
+.detail-waymarks { font-size: 13px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.detail-waymarks strong { color: var(--muted); font-weight: 600; }
+
 /* Endpoint flags: white outline is baked into the SVG (casing strategy); the drop shadow
    lifts them off the tiles in both themes, matching the route casing. */
 .endpoint-flag { filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .45)); }
