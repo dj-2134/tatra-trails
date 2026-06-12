@@ -415,7 +415,7 @@ async function remove() {
 
 function errorText(err) {
   const m = (err && err.message) || String(err);
-  if (/jwt|401|403|row-level|policy|permission/i.test(m)) return "Not authorized — sign in with the founder account.";
+  if (/jwt|401|403|row-level|policy|permission/i.test(m)) return "Not authorized — sign in with the owner account.";
   return `Could not save: ${m}`;
 }
 
