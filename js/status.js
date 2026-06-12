@@ -30,7 +30,8 @@ export function computeStatus(seasonal, adhocList, today) {
   let partial = false;
 
   if (seasonalActive(seasonal, today.mmdd)) {
-    activeClosures.push({ kind: "seasonal", partial: !!seasonal.partial, from: seasonal.from, to: seasonal.to });
+    activeClosures.push({ kind: "seasonal", partial: !!seasonal.partial, from: seasonal.from, to: seasonal.to,
+      extent_from: seasonal.extent_from ?? null, extent_to: seasonal.extent_to ?? null });
     if (seasonal.partial) partial = true; else full = true;
   }
   for (const c of adhocList || []) {

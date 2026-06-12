@@ -8,8 +8,8 @@ export async function listHikes() {
     .from("hikes")
     .select(
       "id,slug,name_en,name_sk,geometry,seasonal_from,seasonal_to,seasonal_partial,note_en,note_sk,ref," +
-        "distance_m,ascent_m,duration_min,is_public," +
-        "closures(id,from_date,to_date,partial,reason_en,reason_sk,source)," +
+        "distance_m,ascent_m,duration_min,is_public,waymark_segments,seasonal_extent_from,seasonal_extent_to," +
+        "closures(id,from_date,to_date,partial,reason_en,reason_sk,source,extent_from,extent_to)," +
         "hike_regions(region_id)"
     )
     .order("name_en");

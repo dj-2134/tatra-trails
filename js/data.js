@@ -3,8 +3,8 @@
 // so this module stays unit-testable without js/config.js present.
 const SELECT =
   "slug,name_en,name_sk,geometry,seasonal_from,seasonal_to,seasonal_partial,note_en,note_sk,ref," +
-  "distance_m,ascent_m,duration_min,is_public," +
-  "closures(from_date,to_date,partial,reason_en,reason_sk,source)," +
+  "distance_m,ascent_m,duration_min,is_public,waymark_segments,seasonal_extent_from,seasonal_extent_to," +
+  "closures(from_date,to_date,partial,reason_en,reason_sk,source,extent_from,extent_to)," +
   "hike_regions(region_id)";
 
 const REGION_SELECT = "id,slug,name_en,name_sk,kraj,centroid_lon,centroid_lat,is_public";

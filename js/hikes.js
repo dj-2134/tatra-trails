@@ -5,7 +5,8 @@ import { lineDistanceMeters } from "./stats.js";
 
 function prepareHike(row, today) {
   const seasonal = row.seasonal_from && row.seasonal_to
-    ? { from: row.seasonal_from, to: row.seasonal_to, partial: !!row.seasonal_partial }
+    ? { from: row.seasonal_from, to: row.seasonal_to, partial: !!row.seasonal_partial,
+        extent_from: row.seasonal_extent_from ?? null, extent_to: row.seasonal_extent_to ?? null }
     : null;
   const { status, activeClosures } = computeStatus(seasonal, row.closures || [], today);
   const note = row.note_en || row.note_sk ? { en: row.note_en || "", sk: row.note_sk || "" } : null;
@@ -27,6 +28,7 @@ function prepareHike(row, today) {
     duration_min: row.duration_min ?? null,
     region_ids: Array.isArray(row.hike_regions) ? row.hike_regions.map((x) => x.region_id) : [],
     is_public: row.is_public !== false,
+    waymark_segments: row.waymark_segments ?? null,
   };
 }
 

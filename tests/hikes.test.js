@@ -71,3 +71,25 @@ test("prepareHikes: maps is_public (absent → true, explicit false → false)",
   assert.equal(a.is_public, true);
   assert.equal(b.is_public, false);
 });
+
+test("prepareHikes: carries waymark_segments and seasonal extents through", () => {
+  const today = { mmdd: "01-15", iso: "2026-01-15" };
+  const segs = [{ color: "red", style: "solid" }];
+  const rows = [{
+    slug: "x", name_en: "X", name_sk: "X",
+    geometry: { type: "LineString", coordinates: [[20, 49], [20.01, 49]] },
+    seasonal_from: "11-01", seasonal_to: "06-15", seasonal_partial: false,
+    seasonal_extent_from: [20, 49], seasonal_extent_to: [20.01, 49],
+    waymark_segments: segs, closures: [],
+  }];
+  const [h] = prepareHikes(rows, today);
+  assert.deepEqual(h.waymark_segments, segs);
+  assert.deepEqual(h.activeClosures[0].extent_from, [20, 49]); // via the seasonal object
+});
+
+test("prepareHikes: waymark_segments defaults to null", () => {
+  const today = { mmdd: "07-15", iso: "2026-07-15" };
+  const rows = [{ slug: "y", name_en: "Y", name_sk: "Y",
+    geometry: { type: "LineString", coordinates: [[20, 49], [20.01, 49]] }, closures: [] }];
+  assert.equal(prepareHikes(rows, today)[0].waymark_segments, null);
+});

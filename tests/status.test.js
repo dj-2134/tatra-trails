@@ -76,3 +76,15 @@ test("computeStatus: inactive ad-hoc does not affect an open hike", () => {
   assert.equal(r.status, "open");
   assert.equal(r.activeClosures.length, 0);
 });
+
+test("computeStatus: seasonal activeClosure carries extent anchors (null when absent)", () => {
+  const today = { mmdd: "01-15", iso: "2026-01-15" };
+  const plain = computeStatus({ from: "11-01", to: "06-15" }, [], today);
+  assert.equal(plain.activeClosures[0].extent_from, null);
+  const seasonal = { from: "11-01", to: "06-15", partial: true,
+    extent_from: [20.06, 49.12], extent_to: [20.09, 49.15] };
+  const r = computeStatus(seasonal, [], today);
+  assert.deepEqual(r.activeClosures[0].extent_from, [20.06, 49.12]);
+  assert.deepEqual(r.activeClosures[0].extent_to, [20.09, 49.15]);
+  assert.equal(r.status, "partial");
+});
