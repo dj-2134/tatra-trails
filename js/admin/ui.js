@@ -297,20 +297,10 @@ function ensureMap() {
   ADMIN_MAP.invalidateSize(); // the editor pane was hidden until now
 }
 
-// Current Open/Closed/Partial from the live form (same inputs the badge uses), for route colour.
-function currentStatus() {
-  const from = $("f-seasonal-from").value.trim();
-  const to = $("f-seasonal-to").value.trim();
-  const seasonal = from && to ? { from, to, partial: $("f-seasonal-partial").checked } : null;
-  const adhoc = state.closures.filter((c) => !c._deleted)
-    .map((c) => ({ from_date: c.from_date || null, to_date: c.to_date || null, partial: !!c.partial }));
-  return computeStatus(seasonal, adhoc, today()).status;
-}
-
 function drawAdminRoute(geometry) {
   if (ADMIN_ROUTE) { ADMIN_MAP.removeLayer(ADMIN_ROUTE); ADMIN_ROUTE = null; }
   if (!geometry || !Array.isArray(geometry.coordinates) || geometry.coordinates.length < 2) return;
-  ADMIN_ROUTE = routeLayer(geometry, currentStatus()).addTo(ADMIN_MAP);
+  ADMIN_ROUTE = routeLayer(geometry, { segments: state && state.waymark_segments }).addTo(ADMIN_MAP);
   const b = ADMIN_ROUTE.getBounds();
   if (b.isValid()) ADMIN_MAP.fitBounds(b, { padding: [30, 30] });
 }

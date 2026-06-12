@@ -253,6 +253,21 @@ function applySelection(slug) {
   row.scrollIntoView({ block: "nearest" });
 }
 
+// Active closures annotated with a localized tooltip label for the ✕ markers.
+function closuresForMap(hike) {
+  const L_ = lang();
+  return (hike.activeClosures || []).map((c) => {
+    const range = c.kind === "seasonal"
+      ? `${fmtMMDD(c.from)} – ${fmtMMDD(c.to)}`
+      : (c.to_date ? `${fmtDate(c.from_date)} – ${fmtDate(c.to_date)}`
+                   : `${fmtDate(c.from_date)} – ${t(DICT, "detail.ongoing", L_)}`);
+    const reason = c.kind === "seasonal"
+      ? t(DICT, "detail.seasonal", L_)
+      : ((L_ === "sk" ? c.reason_sk : c.reason_en) || c.reason_en || "");
+    return { ...c, label: reason ? `${reason} · ${range}` : range };
+  });
+}
+
 function drawRoute(hike, { fit = true } = {}) {
   if (ROUTE_LAYER) { MAP.removeLayer(ROUTE_LAYER); ROUTE_LAYER = null; }
   const labels = {
@@ -260,7 +275,11 @@ function drawRoute(hike, { fit = true } = {}) {
     end: t(DICT, "marker.end", lang()),
     startEnd: t(DICT, "marker.startEnd", lang()),
   };
-  ROUTE_LAYER = routeLayer(hike.geometry, hike.status, { labels }).addTo(MAP);
+  ROUTE_LAYER = routeLayer(hike.geometry, {
+    labels,
+    segments: hike.waymark_segments,
+    closures: closuresForMap(hike),
+  }).addTo(MAP);
   if (!fit) return;
   const bounds = ROUTE_LAYER.getBounds();
   if (bounds.isValid()) MAP.fitBounds(bounds, { padding: [40, 40] });
