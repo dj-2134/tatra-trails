@@ -6,6 +6,7 @@ import { prepareHikes } from "./hikes.js";
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js";
 import { DICT, t } from "./i18n.js";
 import { routeLayer } from "./route-layer.js";
+import { routeEndpoints, parkingSearchUrl } from "./route-endpoints.js";
 import { formatDistance, formatAscent, formatDuration } from "./stats-format.js";
 import { formatBandRange } from "./bands.js";
 import { searchHikes } from "./search.js";
@@ -79,7 +80,11 @@ export async function initTrails(map) {
   initSearch();
   document.addEventListener("tt:langchange", () => {
     renderList();
-    if (SELECTED) openDetail(SELECTED);
+    if (SELECTED) {
+      const hike = HIKES.find((h) => h.slug === SELECTED);
+      if (hike) drawRoute(hike); // marker tooltips follow the language
+      openDetail(SELECTED);
+    }
   });
   document.addEventListener("tt:unitchange", () => {
     renderList();
@@ -250,7 +255,12 @@ function applySelection(slug) {
 
 function drawRoute(hike) {
   if (ROUTE_LAYER) { MAP.removeLayer(ROUTE_LAYER); ROUTE_LAYER = null; }
-  ROUTE_LAYER = routeLayer(hike.geometry, hike.status).addTo(MAP);
+  const labels = {
+    start: t(DICT, "marker.start", lang()),
+    end: t(DICT, "marker.end", lang()),
+    startEnd: t(DICT, "marker.startEnd", lang()),
+  };
+  ROUTE_LAYER = routeLayer(hike.geometry, hike.status, { labels }).addTo(MAP);
   const bounds = ROUTE_LAYER.getBounds();
   if (bounds.isValid()) MAP.fitBounds(bounds, { padding: [40, 40] });
 }
@@ -295,6 +305,19 @@ function openDetail(slug) {
       stats.appendChild(item);
     }
     panel.appendChild(stats);
+  }
+
+  const ends = routeEndpoints(hike.geometry);
+  if (ends) {
+    const parking = document.createElement("div");
+    parking.className = "detail-parking";
+    const a = document.createElement("a");
+    a.href = parkingSearchUrl(ends.start);
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.textContent = `🅿 ${t(DICT, "detail.parking", L_)} ↗`;
+    parking.appendChild(a);
+    panel.appendChild(parking);
   }
 
   for (const c of hike.activeClosures) {

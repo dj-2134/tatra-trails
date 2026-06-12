@@ -167,6 +167,11 @@ path.trail--partial { stroke: #ff9100; }
    lifts them off the tiles in both themes, matching the route casing. */
 .endpoint-flag { filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .45)); }
 .endpoint-flag svg { display: block; }
+.trail-detail .detail-parking {
+  font-size: 13px;
+  border-top: 1px solid var(--chrome-border);
+  padding-top: 8px;
+}
 
 /* ---- Admin page (admin.html only) ---- */
 body.admin { height: auto; min-height: 100%; background: var(--bg); }

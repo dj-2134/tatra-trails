@@ -27,6 +27,10 @@ export const DICT = {
   "detail.distance": { en: "Distance", sk: "Dĺžka" },
   "detail.ascent": { en: "Elevation gain", sk: "Prevýšenie" },
   "detail.walkingTime": { en: "Walking time", sk: "Čas" },
+  "detail.parking": { en: "Parking near trailhead", sk: "Parkovanie pri štarte" },
+  "marker.start": { en: "Start", sk: "Štart" },
+  "marker.end": { en: "End", sk: "Cieľ" },
+  "marker.startEnd": { en: "Start & finish", sk: "Štart a cieľ" },
   "detail.disclaimer": {
     en: "Awareness only. Always verify with TANAP / mountain rescue (HZS) before you go; the absence of a closure here is not a guarantee a trail is open or safe.",
     sk: "Len pre informáciu. Pred túrou si vždy overte stav u TANAP / Horskej záchrannej služby (HZS); chýbajúca uzávera tu neznamená, že chodník je otvorený alebo bezpečný.",
