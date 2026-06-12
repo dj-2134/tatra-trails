@@ -249,6 +249,17 @@ body.admin [hidden] { display: none !important; }
 .region-group .hike-group > summary { padding-left: 26px; font-weight: 600; }
 .region-group .hike-row { padding-left: 26px; }
 
+/* --- Increment F: an OPEN group must look open (soft tint + left accent bar). The
+   transparent border exists in the closed state too so opening causes no layout shift. */
+.region-group { border-left: 3px solid transparent; }
+.region-group[open] {
+  border-left-color: var(--accent);
+  background: rgba(46, 125, 50, .06);
+}
+.region-group .hike-group[open] { background: rgba(46, 125, 50, .08); }
+html.dark .region-group[open] { background: rgba(144, 200, 160, .09); }
+html.dark .region-group .hike-group[open] { background: rgba(144, 200, 160, .12); }
+
 /* --- admin: region multi-select + visibility toggles --- */
 .admin-regions {
   display: flex; flex-direction: column; gap: 8px;
