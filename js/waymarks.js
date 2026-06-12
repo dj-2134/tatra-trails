@@ -49,9 +49,7 @@ export function segmentPolylines(geometry, waymarkSegments) {
   let from = 0;
   for (const cut of cuts) {
     const end = Math.max(cut.end, from);
-    if (end > from || (from === 0 && end === coords.length - 1)) {
-      if (end > from) out.push({ color: cut.color, style: cut.style, coords: coords.slice(from, end + 1) });
-    }
+    if (end > from) out.push({ color: cut.color, style: cut.style, coords: coords.slice(from, end + 1) });
     from = end; // shared boundary vertex: next slice starts where this one ended
   }
   if (from < coords.length - 1) {

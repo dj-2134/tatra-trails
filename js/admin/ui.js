@@ -397,26 +397,28 @@ function resetWaymarks() {
 
 function applySplitClick(snapIdx) {
   const coords = state.geometry.coordinates;
-  const arr = materialize();
-  // Which segment contains snapIdx? Walk the same way segmentPolylines does.
+  // Use the non-materializing array to find the containing segment first.
+  const preview = segsForEdit();
   const endIdx = (seg) => (seg.until ? nearestPointIndex(coords, seg.until) : coords.length - 1);
   let from = 0;
-  let inserted = false;
-  for (let i = 0; i < arr.length; i++) {
-    const end = endIdx(arr[i]);
+  let insertAt = -1;
+  for (let i = 0; i < preview.length; i++) {
+    const end = endIdx(preview[i]);
     if (snapIdx > from && snapIdx < end) {
-      // split segment i at snapIdx: first half keeps colour/style and gets the new anchor
-      arr.splice(i, 0, { color: arr[i].color, style: arr[i].style, until: coords[snapIdx] });
-      inserted = true;
+      insertAt = i;
       break;
     }
     from = Math.max(end, from);
   }
-  if (!inserted) {
+  if (insertAt === -1) {
     $("wm-hint").textContent = "Can't split there — click between the route ends, away from existing splits.";
     redrawPreview();
     return;
   }
+  // Only materialize once we know the insert will happen.
+  const arr = materialize();
+  // split segment insertAt at snapIdx: first half keeps colour/style and gets the new anchor
+  arr.splice(insertAt, 0, { color: arr[insertAt].color, style: arr[insertAt].style, until: coords[snapIdx] });
   MARK_MODE = null;
   $("wm-add-split").classList.remove("armed");
   $("wm-hint").textContent = "";
@@ -430,6 +432,11 @@ function onPreviewClick(e) {
   const snapped = state.geometry.coordinates[idx];
   if (MARK_MODE === "split") { applySplitClick(idx); return; }
   if (MARK_MODE.type === "extent") {
+    if (MARK_MODE.clicks.length === 1 &&
+        snapped[0] === MARK_MODE.clicks[0][0] && snapped[1] === MARK_MODE.clicks[0][1]) {
+      $("wm-hint").textContent = "Same spot — click a different point for the end…";
+      return;
+    }
     MARK_MODE.clicks.push(snapped);
     if (MARK_MODE.clicks.length === 2) {
       MARK_MODE.write(MARK_MODE.clicks[0], MARK_MODE.clicks[1]);
