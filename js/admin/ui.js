@@ -536,12 +536,14 @@ function ensureMap() {
         mapEl.style.height = `${h}px`;
       };
       const onUp = (ev) => {
-        handle.releasePointerCapture(ev.pointerId);
+        try { handle.releasePointerCapture(ev.pointerId); } catch {}
         handle.removeEventListener("pointermove", onMove);
         handle.removeEventListener("pointerup", onUp);
+        handle.removeEventListener("pointercancel", onUp);
       };
       handle.addEventListener("pointermove", onMove);
       handle.addEventListener("pointerup", onUp);
+      handle.addEventListener("pointercancel", onUp);
     });
   }
   ADMIN_MAP.invalidateSize(); // the editor pane was hidden until now
