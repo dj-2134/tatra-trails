@@ -14,3 +14,11 @@ export function routeEndpoints(geometry, { loopThresholdM = 100 } = {}) {
   const end = coords[coords.length - 1];
   return { start, end, isLoop: haversineMeters(start, end) <= loopThresholdM };
 }
+
+// Google Maps "parking" search centered on a [lon, lat] point (note the lat,lon swap in
+// the URL). The viewport-anchored /maps/search/parking/@lat,lon form searches AT the
+// trailhead; the documented ?api=1&query="parking near …" form geocodes unreliably in
+// remote areas.
+export function parkingSearchUrl([lon, lat]) {
+  return `https://www.google.com/maps/search/parking/@${lat},${lon},15z`;
+}

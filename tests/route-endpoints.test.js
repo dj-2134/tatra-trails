@@ -1,7 +1,7 @@
 // tests/route-endpoints.test.js
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { routeEndpoints } from "../js/route-endpoints.js";
+import { routeEndpoints, parkingSearchUrl } from "../js/route-endpoints.js";
 import { haversineMeters } from "../js/stats.js";
 
 const line = (coords) => ({ type: "LineString", coordinates: coords });
@@ -46,4 +46,15 @@ test("routeEndpoints: distance exactly at the threshold counts as a loop (<=)", 
   const g = line([a, [20.10, 49.15], b]);
   assert.equal(routeEndpoints(g, { loopThresholdM: exact }).isLoop, true);
   assert.equal(routeEndpoints(g, { loopThresholdM: exact - 0.001 }).isLoop, false);
+});
+
+test("parkingSearchUrl: lat comes before lon in the URL (GeoJSON order is swapped)", () => {
+  assert.equal(
+    parkingSearchUrl([20.0604, 49.1196]),
+    "https://www.google.com/maps/search/parking/@49.1196,20.0604,15z",
+  );
+});
+
+test("parkingSearchUrl: integer coordinates pass through unchanged", () => {
+  assert.equal(parkingSearchUrl([20, 49]), "https://www.google.com/maps/search/parking/@49,20,15z");
 });
