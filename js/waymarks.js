@@ -76,16 +76,18 @@ export function closureStretch(geometry, from, to) {
 
 // Marker positions along a stretch: one per ~spacingM meters, ≥1 (the midpoint), ≤15
 // (a 30 km seasonal closure must not carpet the map). Walks cumulative distance and
-// emits the vertex that crosses each next multiple of spacingM.
+// emits the vertex that crosses each next multiple of spacingM. Markers are deduplicated
+// per vertex to avoid stacking when a single edge spans multiple spacing intervals.
 export function closureMarkerPositions(stretchCoords, { spacingM = 400 } = {}) {
   if (!Array.isArray(stretchCoords) || stretchCoords.length < 2) return [];
   const out = [];
   let walked = 0;
   let next = spacingM;
+  let lastIdx = -1; // a long edge crosses several thresholds — emit its vertex only once
   for (let i = 1; i < stretchCoords.length && out.length < 15; i++) {
     walked += haversineMeters(stretchCoords[i - 1], stretchCoords[i]);
     while (walked >= next && out.length < 15) {
-      out.push(stretchCoords[i]);
+      if (i !== lastIdx) { out.push(stretchCoords[i]); lastIdx = i; }
       next += spacingM;
     }
   }

@@ -85,13 +85,22 @@ test("closureMarkerPositions: at least one marker (midpoint) for a short stretch
   assert.equal(out.length, 1); // spacing larger than the stretch → midpoint only
 });
 
-test("closureMarkerPositions: spacing produces multiple markers, capped at 15", () => {
-  // COORDS spans ~2.9 km; 400 m spacing → ~7 markers
+test("closureMarkerPositions: a long edge spanning several intervals emits its vertex once", () => {
+  const twoPoint = [[20.00, 49], [20.01, 49]]; // single ~730 m edge
+  const out = closureMarkerPositions(twoPoint, { spacingM: 100 });
+  assert.equal(out.length, 1); // NOT 7 duplicates of the same vertex
+});
+
+test("closureMarkerPositions: spacing produces multiple deduplicated markers, capped at 15", () => {
+  // COORDS spans ~2.9 km with ~730 m edges; 400 m spacing → one marker per vertex crossed
   const out = closureMarkerPositions(COORDS, { spacingM: 400 });
-  assert.ok(out.length >= 5 && out.length <= 9, `got ${out.length}`);
+  assert.ok(out.length >= 3 && out.length <= 7, `got ${out.length}`);
   for (const p of out) assert.ok(Array.isArray(p) && p.length === 2);
-  const capped = closureMarkerPositions(COORDS, { spacingM: 1 });
-  assert.equal(capped.length, 15); // hard cap
+  for (let i = 1; i < out.length; i++) assert.notDeepEqual(out[i], out[i - 1]); // no stacked markers
+  // dense 40-vertex line (~73 m edges): 1 m spacing wants a marker at every vertex → hard cap 15
+  const dense = Array.from({ length: 40 }, (_, i) => [20 + i * 0.001, 49]);
+  const capped = closureMarkerPositions(dense, { spacingM: 1 });
+  assert.equal(capped.length, 15);
 });
 
 test("closureMarkerPositions: empty/short input → empty array", () => {
