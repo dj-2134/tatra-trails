@@ -177,6 +177,8 @@ function blankHike() {
 
 function loadEditor(h) {
   MARK_MODE = null;
+  $("wm-add-split").classList.remove("armed");
+  $("wm-hint").textContent = "";
   state = h;
   $("editor-pane").hidden = false;
   $("editor-title").textContent = h.isNew ? "New hike" : (h.name_en || h.slug);
