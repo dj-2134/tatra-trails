@@ -77,6 +77,11 @@
           <label>From (MM-DD) <input id="f-seasonal-from" placeholder="11-01" /></label>
           <label>To (MM-DD) <input id="f-seasonal-to" placeholder="06-15" /></label>
           <label class="admin-check"><input id="f-seasonal-partial" type="checkbox" /> Partial</label>
+          <div class="admin-wm-actions">
+            <button id="seasonal-extent" class="chip" type="button">Set extent</button>
+            <button id="seasonal-extent-clear" class="chip" type="button" hidden>Clear extent</button>
+            <span id="seasonal-extent-status" class="admin-msg"></span>
+          </div>
         </fieldset>
         <label>Note (EN) <textarea id="f-note-en" rows="2"></textarea></label>
         <label>Note (SK) <textarea id="f-note-sk" rows="2"></textarea></label>

@@ -270,7 +270,9 @@ function renderClosures() {
       <input data-k="reason_en" placeholder="Reason (EN)" />
       <input data-k="reason_sk" placeholder="Reason (SK)" />
       <input data-k="source" placeholder="Source URL" />
-      <button type="button" class="chip admin-danger" data-remove="1" title="Remove">✕</button>`;
+      <button type="button" class="chip admin-danger" data-remove="1" title="Remove">✕</button>
+      <button type="button" class="chip" data-extent="1">Set extent</button>
+      <span class="admin-msg" data-extent-status="1"></span>`;
     fs.querySelectorAll("[data-k]").forEach((inp) => {
       const k = inp.getAttribute("data-k");
       if (inp.type === "checkbox") inp.checked = !!c[k];
@@ -282,12 +284,31 @@ function renderClosures() {
       });
     });
     fs.querySelector("[data-remove]").addEventListener("click", () => { c._deleted = true; renderClosures(); updateBadge(); redrawPreview(); });
+    const extBtn = fs.querySelector("[data-extent]");
+    const extStatus = fs.querySelector("[data-extent-status]");
+    const syncExtent = () => {
+      const has = !!(c.extent_from && c.extent_to);
+      extStatus.textContent = has ? "extent ✓" : "";
+      extBtn.textContent = has ? "Clear extent" : "Set extent";
+    };
+    syncExtent();
+    extBtn.addEventListener("click", () => {
+      if (c.extent_from && c.extent_to) {
+        c.extent_from = null; c.extent_to = null;
+        syncExtent(); redrawPreview(); return;
+      }
+      MARK_MODE = { type: "extent", clicks: [], write: (from, to) => {
+        c.extent_from = from; c.extent_to = to;
+      } };
+      $("wm-hint").textContent = "Click where the closed part STARTS…";
+      redrawPreview();
+    });
     wrap.appendChild(fs);
   });
 }
 
 function addClosure() {
-  state.closures.push({ from_date: "", to_date: "", partial: false, reason_en: "", reason_sk: "", source: "" });
+  state.closures.push({ from_date: "", to_date: "", partial: false, reason_en: "", reason_sk: "", source: "", extent_from: null, extent_to: null });
   renderClosures();
 }
 
@@ -433,8 +454,21 @@ function updateBadge() {
   badge.textContent = status;
 }
 
-// Stub — Task 9 replaces this with the seasonal-extent extent-click UI.
-function renderSeasonalExtent() {}
+function renderSeasonalExtent() {
+  if (!state) return;
+  const has = !!(state.seasonal_extent_from && state.seasonal_extent_to);
+  $("seasonal-extent-status").textContent = has ? "extent ✓" : "";
+  $("seasonal-extent-clear").hidden = !has;
+}
+
+function armSeasonalExtent() {
+  MARK_MODE = { type: "extent", clicks: [], write: (from, to) => {
+    state.seasonal_extent_from = from;
+    state.seasonal_extent_to = to;
+  } };
+  $("wm-hint").textContent = "Click where the closed part STARTS…";
+  redrawPreview();
+}
 
 // ---- map preview ----
 function ensureMap() {
@@ -618,6 +652,11 @@ async function boot() {
   $("add-viewer").addEventListener("click", onAddViewer);
   $("wm-add-split").addEventListener("click", armSplit);
   $("wm-reset").addEventListener("click", resetWaymarks);
+  $("seasonal-extent").addEventListener("click", armSeasonalExtent);
+  $("seasonal-extent-clear").addEventListener("click", () => {
+    state.seasonal_extent_from = null; state.seasonal_extent_to = null;
+    renderSeasonalExtent(); redrawPreview();
+  });
   ["f-seasonal-from", "f-seasonal-to", "f-seasonal-partial"].forEach((id) =>
     $(id).addEventListener("input", () => { updateBadge(); redrawPreview(); }));
 
