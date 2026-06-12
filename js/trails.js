@@ -82,7 +82,7 @@ export async function initTrails(map) {
     renderList();
     if (SELECTED) {
       const hike = HIKES.find((h) => h.slug === SELECTED);
-      if (hike) drawRoute(hike); // marker tooltips follow the language
+      if (hike) drawRoute(hike, { fit: false }); // swap tooltips without yanking the viewport
       openDetail(SELECTED);
     }
   });
@@ -253,7 +253,7 @@ function applySelection(slug) {
   row.scrollIntoView({ block: "nearest" });
 }
 
-function drawRoute(hike) {
+function drawRoute(hike, { fit = true } = {}) {
   if (ROUTE_LAYER) { MAP.removeLayer(ROUTE_LAYER); ROUTE_LAYER = null; }
   const labels = {
     start: t(DICT, "marker.start", lang()),
@@ -261,6 +261,7 @@ function drawRoute(hike) {
     startEnd: t(DICT, "marker.startEnd", lang()),
   };
   ROUTE_LAYER = routeLayer(hike.geometry, hike.status, { labels }).addTo(MAP);
+  if (!fit) return;
   const bounds = ROUTE_LAYER.getBounds();
   if (bounds.isValid()) MAP.fitBounds(bounds, { padding: [40, 40] });
 }
@@ -315,7 +316,7 @@ function openDetail(slug) {
     a.href = parkingSearchUrl(ends.start);
     a.target = "_blank";
     a.rel = "noopener";
-    a.textContent = `🅿 ${t(DICT, "detail.parking", L_)} ↗`;
+    a.textContent = `🅿️ ${t(DICT, "detail.parking", L_)} ↗`;
     parking.appendChild(a);
     panel.appendChild(parking);
   }
