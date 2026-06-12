@@ -21,6 +21,7 @@ let ADMIN_MAP = null;
 let ADMIN_ROUTE = null;
 let MARK_MODE = null;   // null | "split" | { type: "extent", write: (from, to) => void, clicks: [], idxs: [] }
 let ANCHOR_DOTS = null; // L.layerGroup of split/extent dots over the route
+let SPLIT_UNDO = []; // anchors added this session (newest last) — powers the Undo split button
 
 const $ = (id) => document.getElementById(id);
 
@@ -177,6 +178,8 @@ function blankHike() {
 
 function loadEditor(h) {
   MARK_MODE = null;
+  SPLIT_UNDO = [];
+  syncUndoButton();
   $("wm-add-split").classList.remove("armed");
   $("wm-hint").textContent = "";
   state = h;
@@ -363,7 +366,10 @@ function renderWaymarks() {
       rm.title = "Remove this split (merges with the next segment)";
       rm.addEventListener("click", () => {
         const arr = materialize();
+        const removed = arr[i];
         arr.splice(i, 1);
+        SPLIT_UNDO = SPLIT_UNDO.filter((a) => a !== removed.until);
+        syncUndoButton();
         redrawPreview(); renderWaymarks();
       });
       row.append(rm);
@@ -390,6 +396,8 @@ function armSplit() {
 function resetWaymarks() {
   state.waymark_segments = null;
   MARK_MODE = null;
+  SPLIT_UNDO = [];
+  syncUndoButton();
   $("wm-hint").textContent = "";
   $("wm-add-split").classList.remove("armed");
   renderWaymarks(); redrawPreview();
@@ -428,9 +436,32 @@ function applySplitClick(cands) {
   const t = foundIdx / (coords.length - 1);
   arr.splice(insertAt, 0, { color: arr[insertAt].color, style: arr[insertAt].style,
     until: [...coords[foundIdx].slice(0, 2), t] });
+  SPLIT_UNDO.push(arr[insertAt].until);
+  syncUndoButton();
   MARK_MODE = null;
   $("wm-add-split").classList.remove("armed");
   $("wm-hint").textContent = "";
+  renderWaymarks(); redrawPreview();
+}
+
+function syncUndoButton() {
+  $("wm-undo").disabled = SPLIT_UNDO.length === 0;
+}
+
+// Reverse the most recent split: remove the segment carrying that anchor (the next
+// segment absorbs its stretch — exact inverse of the insert, which copied colour/style).
+function undoSplit() {
+  while (SPLIT_UNDO.length) {
+    const anchor = SPLIT_UNDO.pop();
+    const arr = Array.isArray(state.waymark_segments) ? state.waymark_segments : [];
+    const idx = arr.findIndex((seg) => seg.until === anchor);
+    if (idx !== -1) {
+      arr.splice(idx, 1);
+      break;
+    }
+    // anchor already removed via its row's ✕ — stale entry, keep popping
+  }
+  syncUndoButton();
   renderWaymarks(); redrawPreview();
 }
 
@@ -721,6 +752,7 @@ async function boot() {
   $("f-region-filter").addEventListener("input", (e) => filterRegionPicker(e.target.value));
   $("add-viewer").addEventListener("click", onAddViewer);
   $("wm-add-split").addEventListener("click", armSplit);
+  $("wm-undo").addEventListener("click", undoSplit);
   $("wm-reset").addEventListener("click", resetWaymarks);
   $("seasonal-extent").addEventListener("click", armSeasonalExtent);
   $("seasonal-extent-clear").addEventListener("click", () => {
