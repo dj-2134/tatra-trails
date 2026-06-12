@@ -11,6 +11,7 @@ import { normalizeText } from "../search.js";
 import { computeStatus } from "../status.js";
 import { initMap } from "../map.js";
 import { routeLayer } from "../route-layer.js";
+import { nearestPointIndex } from "../waymarks.js";
 import { estimateDurationMin } from "../stats.js";
 
 let HIKES = [];
@@ -18,6 +19,8 @@ let REGIONS = [];
 let state = null; // editor state: { id, isNew, geometry, closures:[{...,_deleted?}] }
 let ADMIN_MAP = null;
 let ADMIN_ROUTE = null;
+let MARK_MODE = null;   // null | "split" | { type: "extent", write: (from, to) => void, clicks: [] }
+let ANCHOR_DOTS = null; // L.layerGroup of split/extent dots over the route
 
 const $ = (id) => document.getElementById(id);
 
@@ -168,10 +171,12 @@ function blankHike() {
     seasonal_from: "", seasonal_to: "", seasonal_partial: false,
     note_en: "", note_sk: "", ref: "", geometry: null, closures: [],
     distance_m: null, ascent_m: null, duration_min: null, region_ids: [],
-    is_public: true };
+    is_public: true,
+    waymark_segments: null, seasonal_extent_from: null, seasonal_extent_to: null };
 }
 
 function loadEditor(h) {
+  MARK_MODE = null;
   state = h;
   $("editor-pane").hidden = false;
   $("editor-title").textContent = h.isNew ? "New hike" : (h.name_en || h.slug);
@@ -191,6 +196,8 @@ function loadEditor(h) {
   $("delete-hike").hidden = h.isNew;
   $("editor-msg").textContent = "";
   renderClosures();
+  renderWaymarks();
+  renderSeasonalExtent();
   setSelectedRegionIds(h.region_ids || []);
   $("f-region-filter").value = "";
   filterRegionPicker("");
@@ -217,6 +224,9 @@ function editHike(row) {
     distance_m: row.distance_m ?? null, ascent_m: row.ascent_m ?? null, duration_min: row.duration_min ?? null,
     region_ids: (row.hike_regions || []).map((x) => x.region_id),
     is_public: row.is_public !== false,
+    waymark_segments: row.waymark_segments ?? null,
+    seasonal_extent_from: row.seasonal_extent_from ?? null,
+    seasonal_extent_to: row.seasonal_extent_to ?? null,
   });
 }
 
@@ -238,6 +248,9 @@ function formToHike() {
     duration_min: durationFromFields(),
     is_public: $("f-public").checked,
     updated_at: new Date().toISOString(),
+    waymark_segments: state.waymark_segments,
+    seasonal_extent_from: state.seasonal_extent_from ?? null,
+    seasonal_extent_to: state.seasonal_extent_to ?? null,
   };
 }
 
@@ -265,6 +278,7 @@ function renderClosures() {
       inp.addEventListener("input", () => {
         c[k] = inp.type === "checkbox" ? inp.checked : inp.value;
         updateBadge();
+        redrawPreview();
       });
     });
     fs.querySelector("[data-remove]").addEventListener("click", () => { c._deleted = true; renderClosures(); updateBadge(); });
@@ -275,6 +289,128 @@ function renderClosures() {
 function addClosure() {
   state.closures.push({ from_date: "", to_date: "", partial: false, reason_en: "", reason_sk: "", source: "" });
   renderClosures();
+}
+
+// ---- waymarks editor (Increment F) ----
+const WM_COLORS = ["red", "blue", "green", "yellow", "none"];
+
+function segsForEdit() {
+  return Array.isArray(state.waymark_segments) && state.waymark_segments.length
+    ? state.waymark_segments
+    : [{ color: "none", style: "dashed" }];
+}
+
+function renderWaymarks() {
+  const wrap = $("wm-seg-list");
+  wrap.innerHTML = "";
+  const segs = segsForEdit();
+  segs.forEach((seg, i) => {
+    const row = document.createElement("div");
+    row.className = "admin-wm-row";
+    const colorSel = document.createElement("select");
+    for (const c of WM_COLORS) {
+      const o = document.createElement("option");
+      o.value = c; o.textContent = c === "none" ? "unmarked" : c;
+      colorSel.appendChild(o);
+    }
+    colorSel.value = WM_COLORS.includes(seg.color) ? seg.color : "none";
+    const styleSel = document.createElement("select");
+    for (const s of ["solid", "dashed"]) {
+      const o = document.createElement("option");
+      o.value = s; o.textContent = s;
+      styleSel.appendChild(o);
+    }
+    const syncStyle = () => {
+      if (colorSel.value === "none") { styleSel.value = "dashed"; styleSel.disabled = true; }
+      else styleSel.disabled = false;
+    };
+    styleSel.value = seg.style === "dashed" ? "dashed" : "solid";
+    syncStyle();
+    colorSel.addEventListener("change", () => {
+      syncStyle();
+      materialize()[i].color = colorSel.value;
+      if (colorSel.value === "none") materialize()[i].style = "dashed";
+      redrawPreview();
+    });
+    styleSel.addEventListener("change", () => { materialize()[i].style = styleSel.value; redrawPreview(); });
+    row.append(`#${i + 1} `, colorSel, styleSel);
+    if (seg.until) {
+      const rm = document.createElement("button");
+      rm.type = "button"; rm.className = "chip admin-danger"; rm.textContent = "✕ split";
+      rm.title = "Remove this split (merges with the next segment)";
+      rm.addEventListener("click", () => {
+        const arr = materialize();
+        delete arr[i].until; // segment now runs to where the NEXT one ends
+        redrawPreview(); renderWaymarks();
+      });
+      row.append(rm);
+    }
+    wrap.appendChild(row);
+  });
+}
+
+// Editing materializes the default single segment into real state.
+function materialize() {
+  if (!Array.isArray(state.waymark_segments) || !state.waymark_segments.length) {
+    state.waymark_segments = [{ color: "none", style: "dashed" }];
+  }
+  return state.waymark_segments;
+}
+
+function armSplit() {
+  MARK_MODE = MARK_MODE === "split" ? null : "split";
+  $("wm-hint").textContent = MARK_MODE === "split" ? "Click the route where the marking changes…" : "";
+  $("wm-add-split").classList.toggle("armed", MARK_MODE === "split");
+  redrawPreview();
+}
+
+function resetWaymarks() {
+  state.waymark_segments = null;
+  MARK_MODE = null;
+  $("wm-hint").textContent = "";
+  $("wm-add-split").classList.remove("armed");
+  renderWaymarks(); redrawPreview();
+}
+
+function applySplitClick(snapIdx) {
+  const coords = state.geometry.coordinates;
+  const arr = materialize();
+  // Which segment contains snapIdx? Walk the same way segmentPolylines does.
+  const endIdx = (seg) => (seg.until ? nearestPointIndex(coords, seg.until) : coords.length - 1);
+  let from = 0;
+  for (let i = 0; i < arr.length; i++) {
+    const end = endIdx(arr[i]);
+    if (snapIdx > from && snapIdx < end) {
+      // split segment i at snapIdx: first half keeps colour/style and gets the new anchor
+      arr.splice(i, 0, { color: arr[i].color, style: arr[i].style, until: coords[snapIdx] });
+      break;
+    }
+    from = Math.max(end, from);
+  }
+  MARK_MODE = null;
+  $("wm-add-split").classList.remove("armed");
+  $("wm-hint").textContent = "";
+  renderWaymarks(); redrawPreview();
+}
+
+function onPreviewClick(e) {
+  if (!MARK_MODE || !state || !state.geometry) return;
+  const clicked = [e.latlng.lng, e.latlng.lat];
+  const idx = nearestPointIndex(state.geometry.coordinates, clicked);
+  const snapped = state.geometry.coordinates[idx];
+  if (MARK_MODE === "split") { applySplitClick(idx); return; }
+  if (MARK_MODE.type === "extent") {
+    MARK_MODE.clicks.push(snapped);
+    if (MARK_MODE.clicks.length === 2) {
+      MARK_MODE.write(MARK_MODE.clicks[0], MARK_MODE.clicks[1]);
+      MARK_MODE = null;
+      $("wm-hint").textContent = "";
+      renderClosures(); renderSeasonalExtent(); redrawPreview();
+    } else {
+      $("wm-hint").textContent = "Now click where the closed part ends…";
+      redrawPreview(); // shows the first dot
+    }
+  }
 }
 
 // ---- live status badge (reuses the tested pure status.js) ----
@@ -291,18 +427,64 @@ function updateBadge() {
   badge.textContent = status;
 }
 
+// Stub — Task 9 replaces this with the seasonal-extent extent-click UI.
+function renderSeasonalExtent() {}
+
 // ---- map preview ----
 function ensureMap() {
-  if (!ADMIN_MAP) ADMIN_MAP = initMap("admin-map");
+  if (!ADMIN_MAP) {
+    ADMIN_MAP = initMap("admin-map");
+    ADMIN_MAP.on("click", onPreviewClick);
+  }
   ADMIN_MAP.invalidateSize(); // the editor pane was hidden until now
 }
 
-function drawAdminRoute(geometry) {
+// Active closures from the LIVE form (same inputs as updateBadge), annotated for ✕ markers.
+function liveClosuresForMap() {
+  const from = $("f-seasonal-from").value.trim();
+  const to = $("f-seasonal-to").value.trim();
+  const seasonal = from && to
+    ? { from, to, partial: $("f-seasonal-partial").checked,
+        extent_from: state.seasonal_extent_from ?? null, extent_to: state.seasonal_extent_to ?? null }
+    : null;
+  const adhoc = state.closures.filter((c) => !c._deleted)
+    .map((c) => ({ from_date: c.from_date || null, to_date: c.to_date || null, partial: !!c.partial,
+      extent_from: c.extent_from || null, extent_to: c.extent_to || null }));
+  return computeStatus(seasonal, adhoc, today()).activeClosures
+    .map((c) => ({ ...c, label: c.kind === "seasonal" ? "Seasonal closure" : "Closure" }));
+}
+
+function redrawPreview() {
+  if (!state) return;
+  drawAdminRoute(state.geometry, { fit: false });
+}
+
+function drawAdminRoute(geometry, { fit = true } = {}) {
   if (ADMIN_ROUTE) { ADMIN_MAP.removeLayer(ADMIN_ROUTE); ADMIN_ROUTE = null; }
+  if (ANCHOR_DOTS) { ADMIN_MAP.removeLayer(ANCHOR_DOTS); ANCHOR_DOTS = null; }
   if (!geometry || !Array.isArray(geometry.coordinates) || geometry.coordinates.length < 2) return;
-  ADMIN_ROUTE = routeLayer(geometry, { segments: state && state.waymark_segments }).addTo(ADMIN_MAP);
+  ADMIN_ROUTE = routeLayer(geometry, {
+    segments: state ? state.waymark_segments : null,
+    closures: state ? liveClosuresForMap() : [],
+    dim: !!MARK_MODE,
+  }).addTo(ADMIN_MAP);
+  ANCHOR_DOTS = L.layerGroup(anchorDots(geometry)).addTo(ADMIN_MAP);
+  $("admin-map").classList.toggle("marking", !!MARK_MODE);
+  if (!fit) return;
   const b = ADMIN_ROUTE.getBounds();
   if (b.isValid()) ADMIN_MAP.fitBounds(b, { padding: [30, 30] });
+}
+
+// Small full-opacity dots: every split anchor + the pending first extent click.
+function anchorDots(geometry) {
+  const dots = [];
+  const dot = ([lon, lat]) => L.circleMarker([lat, lon],
+    { radius: 5, color: "#fff", weight: 2, fillColor: "#1565c0", fillOpacity: 1 });
+  for (const seg of state.waymark_segments || []) {
+    if (Array.isArray(seg.until)) dots.push(dot(seg.until));
+  }
+  if (MARK_MODE && MARK_MODE.type === "extent") for (const c of MARK_MODE.clicks) dots.push(dot(c));
+  return dots;
 }
 
 // ---- stat-field helpers ----
@@ -359,6 +541,7 @@ function normalizeClosure(c) {
   const out = {
     from_date: c.from_date, to_date: c.to_date || null, partial: !!c.partial,
     reason_en: c.reason_en, reason_sk: c.reason_sk, source: c.source || null,
+    extent_from: c.extent_from || null, extent_to: c.extent_to || null,
   };
   if (c.id) out.id = c.id;
   return out;
@@ -427,7 +610,10 @@ async function boot() {
   $("copy-arrow").addEventListener("click", copyArrow);
   $("f-region-filter").addEventListener("input", (e) => filterRegionPicker(e.target.value));
   $("add-viewer").addEventListener("click", onAddViewer);
-  ["f-seasonal-from", "f-seasonal-to", "f-seasonal-partial"].forEach((id) => $(id).addEventListener("input", updateBadge));
+  $("wm-add-split").addEventListener("click", armSplit);
+  $("wm-reset").addEventListener("click", resetWaymarks);
+  ["f-seasonal-from", "f-seasonal-to", "f-seasonal-partial"].forEach((id) =>
+    $(id).addEventListener("input", () => { updateBadge(); redrawPreview(); }));
 
   // onAuthChange fires with the INITIAL_SESSION on subscribe, and we also probe getSession()
   // explicitly; the `entered` guard makes refreshList run once per sign-in, not twice on boot.

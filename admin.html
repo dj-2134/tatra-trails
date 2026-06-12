@@ -85,6 +85,15 @@
           <label>Route (GPX) <input id="f-gpx" type="file" accept=".gpx" /></label>
           <span id="f-geom-status" class="admin-msg"></span>
         </div>
+        <fieldset class="admin-waymarks">
+          <legend>Waymarks</legend>
+          <div id="wm-seg-list"></div>
+          <div class="admin-wm-actions">
+            <button id="wm-add-split" class="chip" type="button">+ Add split</button>
+            <button id="wm-reset" class="chip" type="button">Reset</button>
+            <span id="wm-hint" class="admin-msg"></span>
+          </div>
+        </fieldset>
         <div class="admin-stats">
           <label>Distance (km) <input id="f-distance" type="number" min="0" step="0.1" /></label>
           <label>Elevation gain (m) <input id="f-ascent" type="number" min="0" step="1" /></label>
