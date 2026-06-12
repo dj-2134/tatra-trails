@@ -253,7 +253,15 @@ function applySelection(slug) {
   row.scrollIntoView({ block: "nearest" });
 }
 
+// Leaflet tooltips render string content via innerHTML — escape DB-sourced text.
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (ch) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+}
+
 // Active closures annotated with a localized tooltip label for the ✕ markers.
+// Ad-hoc reason strings come from the DB and are escaped before entering the label
+// so that Leaflet's innerHTML rendering cannot execute injected markup.
 function closuresForMap(hike) {
   const L_ = lang();
   return (hike.activeClosures || []).map((c) => {
@@ -263,7 +271,7 @@ function closuresForMap(hike) {
                    : `${fmtDate(c.from_date)} – ${t(DICT, "detail.ongoing", L_)}`);
     const reason = c.kind === "seasonal"
       ? t(DICT, "detail.seasonal", L_)
-      : ((L_ === "sk" ? c.reason_sk : c.reason_en) || c.reason_en || "");
+      : escapeHtml((L_ === "sk" ? c.reason_sk : c.reason_en) || c.reason_en || "");
     return { ...c, label: reason ? `${reason} · ${range}` : range };
   });
 }
