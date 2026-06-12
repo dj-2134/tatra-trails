@@ -297,6 +297,7 @@ function renderClosures() {
         c.extent_from = null; c.extent_to = null;
         syncExtent(); redrawPreview(); return;
       }
+      $("wm-add-split").classList.remove("armed");
       MARK_MODE = { type: "extent", clicks: [], write: (from, to) => {
         c.extent_from = from; c.extent_to = to;
       } };
@@ -462,6 +463,8 @@ function renderSeasonalExtent() {
 }
 
 function armSeasonalExtent() {
+  if (!state) return;
+  $("wm-add-split").classList.remove("armed");
   MARK_MODE = { type: "extent", clicks: [], write: (from, to) => {
     state.seasonal_extent_from = from;
     state.seasonal_extent_to = to;
