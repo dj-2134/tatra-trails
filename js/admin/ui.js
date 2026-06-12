@@ -11,7 +11,7 @@ import { normalizeText } from "../search.js";
 import { computeStatus } from "../status.js";
 import { initMap } from "../map.js";
 import { routeLayer } from "../route-layer.js";
-import { nearestPointIndex } from "../waymarks.js";
+import { snapCandidates, snapAnchorIndex } from "../waymarks.js";
 import { estimateDurationMin } from "../stats.js";
 
 let HIKES = [];
@@ -300,7 +300,7 @@ function renderClosures() {
         syncExtent(); redrawPreview(); return;
       }
       $("wm-add-split").classList.remove("armed");
-      MARK_MODE = { type: "extent", clicks: [], write: (from, to) => {
+      MARK_MODE = { type: "extent", clicks: [], idxs: [], write: (from, to) => {
         c.extent_from = from; c.extent_to = to;
       } };
       $("wm-hint").textContent = "Click where the closed part STARTS…";
@@ -395,20 +395,26 @@ function resetWaymarks() {
   renderWaymarks(); redrawPreview();
 }
 
-function applySplitClick(snapIdx) {
+function applySplitClick(cands) {
   const coords = state.geometry.coordinates;
   // Use the non-materializing array to find the containing segment first.
   const preview = segsForEdit();
-  const endIdx = (seg) => (seg.until ? nearestPointIndex(coords, seg.until) : coords.length - 1);
-  let from = 0;
+  const endIdx = (seg) => (seg.until ? snapAnchorIndex(coords, seg.until) : coords.length - 1);
+  // Try each candidate (route order = outbound first) to find one that lands strictly inside a segment.
+  let foundIdx = -1;
   let insertAt = -1;
-  for (let i = 0; i < preview.length; i++) {
-    const end = endIdx(preview[i]);
-    if (snapIdx > from && snapIdx < end) {
-      insertAt = i;
-      break;
+  for (const snapIdx of cands) {
+    let from = 0;
+    for (let i = 0; i < preview.length; i++) {
+      const end = endIdx(preview[i]);
+      if (snapIdx > from && snapIdx < end) {
+        foundIdx = snapIdx;
+        insertAt = i;
+        break;
+      }
+      from = Math.max(end, from);
     }
-    from = Math.max(end, from);
+    if (insertAt !== -1) break;
   }
   if (insertAt === -1) {
     $("wm-hint").textContent = "Can't split there — click between the route ends, away from existing splits.";
@@ -417,8 +423,11 @@ function applySplitClick(snapIdx) {
   }
   // Only materialize once we know the insert will happen.
   const arr = materialize();
-  // split segment insertAt at snapIdx: first half keeps colour/style and gets the new anchor
-  arr.splice(insertAt, 0, { color: arr[insertAt].color, style: arr[insertAt].style, until: coords[snapIdx] });
+  // split segment insertAt at foundIdx: first half keeps colour/style and gets the new anchor
+  // Store [lon, lat, t] so re-snapping is pass-aware.
+  const t = foundIdx / (coords.length - 1);
+  arr.splice(insertAt, 0, { color: arr[insertAt].color, style: arr[insertAt].style,
+    until: [...coords[foundIdx].slice(0, 2), t] });
   MARK_MODE = null;
   $("wm-add-split").classList.remove("armed");
   $("wm-hint").textContent = "";
@@ -428,16 +437,40 @@ function applySplitClick(snapIdx) {
 function onPreviewClick(e) {
   if (!MARK_MODE || !state || !state.geometry) return;
   const clicked = [e.latlng.lng, e.latlng.lat];
-  const idx = nearestPointIndex(state.geometry.coordinates, clicked);
-  const snapped = state.geometry.coordinates[idx];
-  if (MARK_MODE === "split") { applySplitClick(idx); return; }
+  const coords = state.geometry.coordinates;
+  if (MARK_MODE === "split") {
+    const cands = snapCandidates(coords, clicked);
+    applySplitClick(cands);
+    return;
+  }
   if (MARK_MODE.type === "extent") {
-    if (MARK_MODE.clicks.length === 1 &&
-        snapped[0] === MARK_MODE.clicks[0][0] && snapped[1] === MARK_MODE.clicks[0][1]) {
+    const cands = snapCandidates(coords, clicked);
+    // Pick the candidate index for this click.
+    // First click → candidates[0] (outbound).
+    // Second click → if candidates[0] would be the same index as the first click's chosen index
+    //   AND there is another candidate, use the next candidate; otherwise candidates[0].
+    // Same-spot guard: if there is genuinely only one candidate and it equals the first click's
+    //   index, it's a true same-spot.
+    let chosenIdx;
+    if (MARK_MODE.idxs.length === 0) {
+      chosenIdx = cands[0];
+    } else {
+      const firstIdx = MARK_MODE.idxs[0];
+      if (cands[0] === firstIdx && cands.length > 1) {
+        chosenIdx = cands[1];
+      } else {
+        chosenIdx = cands[0];
+      }
+    }
+    // Same-spot guard: true same vertex (only one candidate and it matches first click's index).
+    if (MARK_MODE.idxs.length === 1 && chosenIdx === MARK_MODE.idxs[0]) {
       $("wm-hint").textContent = "Same spot — click a different point for the end…";
       return;
     }
-    MARK_MODE.clicks.push(snapped);
+    const t = chosenIdx / (coords.length - 1);
+    const anchor = [...coords[chosenIdx].slice(0, 2), t];
+    MARK_MODE.clicks.push(anchor);
+    MARK_MODE.idxs.push(chosenIdx);
     if (MARK_MODE.clicks.length === 2) {
       MARK_MODE.write(MARK_MODE.clicks[0], MARK_MODE.clicks[1]);
       MARK_MODE = null;
@@ -474,7 +507,7 @@ function renderSeasonalExtent() {
 function armSeasonalExtent() {
   if (!state) return;
   $("wm-add-split").classList.remove("armed");
-  MARK_MODE = { type: "extent", clicks: [], write: (from, to) => {
+  MARK_MODE = { type: "extent", clicks: [], idxs: [], write: (from, to) => {
     state.seasonal_extent_from = from;
     state.seasonal_extent_to = to;
   } };

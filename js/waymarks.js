@@ -18,6 +18,55 @@ export function nearestPointIndex(coords, point) {
   return best;
 }
 
+// Candidate vertex indices for a clicked/stored point on a possibly self-overlapping
+// route: one representative (the locally nearest vertex) per contiguous run of vertices
+// within tolM of the point. A lollipop's out-and-back legs yield one candidate per pass,
+// in route order. Always contains at least the globally nearest vertex.
+export function snapCandidates(coords, point, { tolM = 30 } = {}) {
+  if (!Array.isArray(coords) || coords.length === 0) return [];
+  // Compute all distances.
+  const dists = coords.map((c) => haversineMeters(c, point));
+  // Find global best distance.
+  let bestD = Infinity;
+  for (const d of dists) if (d < bestD) bestD = d;
+  const limit = bestD + tolM;
+  // Walk indices, group consecutive runs where d[i] <= limit, emit the min-distance index per run.
+  const out = [];
+  let inRun = false;
+  let runBestIdx = -1;
+  let runBestD = Infinity;
+  for (let i = 0; i < coords.length; i++) {
+    if (dists[i] <= limit) {
+      if (!inRun) { inRun = true; runBestIdx = i; runBestD = dists[i]; }
+      else if (dists[i] < runBestD) { runBestD = dists[i]; runBestIdx = i; }
+    } else {
+      if (inRun) { out.push(runBestIdx); inRun = false; runBestIdx = -1; runBestD = Infinity; }
+    }
+  }
+  if (inRun) out.push(runBestIdx);
+  // Guarantee at least the globally nearest index is present.
+  if (out.length === 0) out.push(nearestPointIndex(coords, point));
+  return out;
+}
+
+// Pass-aware anchor snap: anchor = [lon, lat] (legacy → first/global-nearest candidate)
+// or [lon, lat, t] (t = stored route fraction → the candidate whose own fraction is
+// closest to t, so anchors survive both GPX re-uploads AND self-overlapping passes).
+export function snapAnchorIndex(coords, anchor) {
+  const cands = snapCandidates(coords, anchor);
+  if (anchor.length >= 3 && Number.isFinite(anchor[2])) {
+    const n = coords.length - 1;
+    let best = cands[0], bestDiff = Infinity;
+    for (const idx of cands) {
+      const diff = Math.abs(idx / n - anchor[2]);
+      if (diff < bestDiff) { bestDiff = diff; best = idx; }
+    }
+    return best;
+  }
+  // Legacy 2-element: return candidates[0] which equals nearestPointIndex result.
+  return cands[0];
+}
+
 function validGeometry(geometry) {
   return geometry && geometry.type === "LineString" && Array.isArray(geometry.coordinates) &&
     geometry.coordinates.length >= 2 && Array.isArray(geometry.coordinates[0]);
@@ -41,7 +90,7 @@ export function segmentPolylines(geometry, waymarkSegments) {
   // Snap each segment's end anchor; the last segment (no `until`) runs to the route end.
   const cuts = waymarkSegments.map((seg) => ({
     ...normalizeSeg(seg),
-    end: seg && Array.isArray(seg.until) ? nearestPointIndex(coords, seg.until) : coords.length - 1,
+    end: seg && Array.isArray(seg.until) ? snapAnchorIndex(coords, seg.until) : coords.length - 1,
   }));
   cuts.sort((a, b) => a.end - b.end); // out-of-order anchors are re-sorted, never an error
 
@@ -65,8 +114,8 @@ export function segmentPolylines(geometry, waymarkSegments) {
 export function closureStretch(geometry, from, to) {
   if (!validGeometry(geometry) || !Array.isArray(from) || !Array.isArray(to)) return null;
   const coords = geometry.coordinates;
-  let a = nearestPointIndex(coords, from);
-  let b = nearestPointIndex(coords, to);
+  let a = snapAnchorIndex(coords, from);
+  let b = snapAnchorIndex(coords, to);
   if (a > b) [a, b] = [b, a];
   if (a === b) return null;
   return coords.slice(a, b + 1);
