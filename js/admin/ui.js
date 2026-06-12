@@ -281,7 +281,7 @@ function renderClosures() {
         redrawPreview();
       });
     });
-    fs.querySelector("[data-remove]").addEventListener("click", () => { c._deleted = true; renderClosures(); updateBadge(); });
+    fs.querySelector("[data-remove]").addEventListener("click", () => { c._deleted = true; renderClosures(); updateBadge(); redrawPreview(); });
     wrap.appendChild(fs);
   });
 }
@@ -328,8 +328,7 @@ function renderWaymarks() {
     syncStyle();
     colorSel.addEventListener("change", () => {
       syncStyle();
-      materialize()[i].color = colorSel.value;
-      if (colorSel.value === "none") materialize()[i].style = "dashed";
+      const s = materialize()[i]; s.color = colorSel.value; if (colorSel.value === "none") s.style = "dashed";
       redrawPreview();
     });
     styleSel.addEventListener("change", () => { materialize()[i].style = styleSel.value; redrawPreview(); });
@@ -340,7 +339,7 @@ function renderWaymarks() {
       rm.title = "Remove this split (merges with the next segment)";
       rm.addEventListener("click", () => {
         const arr = materialize();
-        delete arr[i].until; // segment now runs to where the NEXT one ends
+        arr.splice(i, 1);
         redrawPreview(); renderWaymarks();
       });
       row.append(rm);
@@ -378,14 +377,21 @@ function applySplitClick(snapIdx) {
   // Which segment contains snapIdx? Walk the same way segmentPolylines does.
   const endIdx = (seg) => (seg.until ? nearestPointIndex(coords, seg.until) : coords.length - 1);
   let from = 0;
+  let inserted = false;
   for (let i = 0; i < arr.length; i++) {
     const end = endIdx(arr[i]);
     if (snapIdx > from && snapIdx < end) {
       // split segment i at snapIdx: first half keeps colour/style and gets the new anchor
       arr.splice(i, 0, { color: arr[i].color, style: arr[i].style, until: coords[snapIdx] });
+      inserted = true;
       break;
     }
     from = Math.max(end, from);
+  }
+  if (!inserted) {
+    $("wm-hint").textContent = "Can't split there — click between the route ends, away from existing splits.";
+    redrawPreview();
+    return;
   }
   MARK_MODE = null;
   $("wm-add-split").classList.remove("armed");
@@ -462,21 +468,21 @@ function redrawPreview() {
 function drawAdminRoute(geometry, { fit = true } = {}) {
   if (ADMIN_ROUTE) { ADMIN_MAP.removeLayer(ADMIN_ROUTE); ADMIN_ROUTE = null; }
   if (ANCHOR_DOTS) { ADMIN_MAP.removeLayer(ANCHOR_DOTS); ANCHOR_DOTS = null; }
+  $("admin-map").classList.toggle("marking", !!MARK_MODE);
   if (!geometry || !Array.isArray(geometry.coordinates) || geometry.coordinates.length < 2) return;
   ADMIN_ROUTE = routeLayer(geometry, {
     segments: state ? state.waymark_segments : null,
     closures: state ? liveClosuresForMap() : [],
     dim: !!MARK_MODE,
   }).addTo(ADMIN_MAP);
-  ANCHOR_DOTS = L.layerGroup(anchorDots(geometry)).addTo(ADMIN_MAP);
-  $("admin-map").classList.toggle("marking", !!MARK_MODE);
+  ANCHOR_DOTS = L.layerGroup(anchorDots()).addTo(ADMIN_MAP);
   if (!fit) return;
   const b = ADMIN_ROUTE.getBounds();
   if (b.isValid()) ADMIN_MAP.fitBounds(b, { padding: [30, 30] });
 }
 
 // Small full-opacity dots: every split anchor + the pending first extent click.
-function anchorDots(geometry) {
+function anchorDots() {
   const dots = [];
   const dot = ([lon, lat]) => L.circleMarker([lat, lon],
     { radius: 5, color: "#fff", weight: 2, fillColor: "#1565c0", fillOpacity: 1 });
