@@ -520,6 +520,7 @@ function ensureMap() {
   if (!ADMIN_MAP) {
     ADMIN_MAP = initMap("admin-map");
     ADMIN_MAP.on("click", onPreviewClick);
+    new ResizeObserver(() => ADMIN_MAP && ADMIN_MAP.invalidateSize()).observe($("admin-map"));
   }
   ADMIN_MAP.invalidateSize(); // the editor pane was hidden until now
 }

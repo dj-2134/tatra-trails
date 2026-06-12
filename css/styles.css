@@ -229,7 +229,16 @@ body.admin [hidden] { display: none !important; }
 .admin-actions { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
 .admin-danger { color: var(--closed); border-color: var(--closed); }
 .admin-msg { font-size: 13px; color: var(--muted); }
-.admin-map { height: 280px; border: 1px solid var(--chrome-border); border-radius: var(--radius); margin-bottom: 12px; }
+.admin-map {
+  height: 420px;
+  min-height: 240px;
+  max-height: 80vh;
+  resize: vertical;
+  overflow: hidden;
+  border: 1px solid var(--chrome-border);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+}
 .admin-stats { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
 .admin-hm { display: inline-flex; align-items: center; gap: 4px; }
 .admin-hm input { width: 56px; }
