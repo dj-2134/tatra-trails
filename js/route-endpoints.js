@@ -22,3 +22,10 @@ export function routeEndpoints(geometry, { loopThresholdM = 100 } = {}) {
 export function parkingSearchUrl([lon, lat]) {
   return `https://www.google.com/maps/search/parking/@${lat},${lon},15z`;
 }
+
+// Google Maps pin at the exact [lon, lat] point (documented ?api=1&query= form; a
+// coordinate query drops a marker there). Maps URLs can't combine a search AND a custom
+// pin, hence two links: parkingSearchUrl finds parking, this one marks the trailhead.
+export function trailheadPinUrl([lon, lat]) {
+  return `https://www.google.com/maps/search/?api=1&query=${lat}%2C${lon}`;
+}

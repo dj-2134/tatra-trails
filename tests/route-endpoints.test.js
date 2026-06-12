@@ -1,7 +1,7 @@
 // tests/route-endpoints.test.js
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { routeEndpoints, parkingSearchUrl } from "../js/route-endpoints.js";
+import { routeEndpoints, parkingSearchUrl, trailheadPinUrl } from "../js/route-endpoints.js";
 import { haversineMeters } from "../js/stats.js";
 
 const line = (coords) => ({ type: "LineString", coordinates: coords });
@@ -57,4 +57,11 @@ test("parkingSearchUrl: lat comes before lon in the URL (GeoJSON order is swappe
 
 test("parkingSearchUrl: integer coordinates pass through unchanged", () => {
   assert.equal(parkingSearchUrl([20, 49]), "https://www.google.com/maps/search/parking/@49,20,15z");
+});
+
+test("trailheadPinUrl: drops a pin at lat,lon (GeoJSON order is swapped)", () => {
+  assert.equal(
+    trailheadPinUrl([20.0604, 49.1196]),
+    "https://www.google.com/maps/search/?api=1&query=49.1196%2C20.0604",
+  );
 });

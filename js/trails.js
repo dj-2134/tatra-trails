@@ -6,7 +6,7 @@ import { prepareHikes } from "./hikes.js";
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js";
 import { DICT, t } from "./i18n.js";
 import { routeLayer } from "./route-layer.js";
-import { routeEndpoints, parkingSearchUrl } from "./route-endpoints.js";
+import { routeEndpoints, parkingSearchUrl, trailheadPinUrl } from "./route-endpoints.js";
 import { formatDistance, formatAscent, formatDuration } from "./stats-format.js";
 import { formatBandRange } from "./bands.js";
 import { searchHikes } from "./search.js";
@@ -312,12 +312,19 @@ function openDetail(slug) {
   if (ends) {
     const parking = document.createElement("div");
     parking.className = "detail-parking";
-    const a = document.createElement("a");
-    a.href = parkingSearchUrl(ends.start);
-    a.target = "_blank";
-    a.rel = "noopener";
-    a.textContent = `🅿️ ${t(DICT, "detail.parking", L_)} ↗`;
-    parking.appendChild(a);
+    const links = [
+      [parkingSearchUrl(ends.start), `🅿️ ${t(DICT, "detail.parking", L_)} ↗`],
+      [trailheadPinUrl(ends.start), `📍 ${t(DICT, "detail.trailhead", L_)} ↗`],
+    ];
+    links.forEach(([href, text], i) => {
+      if (i) parking.append(" · ");
+      const a = document.createElement("a");
+      a.href = href;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = text;
+      parking.appendChild(a);
+    });
     panel.appendChild(parking);
   }
 

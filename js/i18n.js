@@ -28,6 +28,7 @@ export const DICT = {
   "detail.ascent": { en: "Elevation gain", sk: "Prevýšenie" },
   "detail.walkingTime": { en: "Walking time", sk: "Čas" },
   "detail.parking": { en: "Parking near trailhead", sk: "Parkovanie pri štarte" },
+  "detail.trailhead": { en: "Trailhead", sk: "Štart trasy" },
   "marker.start": { en: "Start", sk: "Štart" },
   "marker.end": { en: "End", sk: "Cieľ" },
   "marker.startEnd": { en: "Start & finish", sk: "Štart a cieľ" },
