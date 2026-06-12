@@ -19,7 +19,7 @@ let REGIONS = [];
 let state = null; // editor state: { id, isNew, geometry, closures:[{...,_deleted?}] }
 let ADMIN_MAP = null;
 let ADMIN_ROUTE = null;
-let MARK_MODE = null;   // null | "split" | { type: "extent", write: (from, to) => void, clicks: [] }
+let MARK_MODE = null;   // null | "split" | { type: "extent", write: (from, to) => void, clicks: [], idxs: [] }
 let ANCHOR_DOTS = null; // L.layerGroup of split/extent dots over the route
 
 const $ = (id) => document.getElementById(id);
