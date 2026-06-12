@@ -2,6 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { routeEndpoints } from "../js/route-endpoints.js";
+import { haversineMeters } from "../js/stats.js";
 
 const line = (coords) => ({ type: "LineString", coordinates: coords });
 
@@ -36,4 +37,13 @@ test("routeEndpoints: null on missing/invalid/short geometry", () => {
   assert.equal(routeEndpoints({ type: "MultiLineString", coordinates: [[[20, 49], [21, 49]]] }), null);
   assert.equal(routeEndpoints(line([])), null);
   assert.equal(routeEndpoints(line([[20, 49]])), null);
+  assert.equal(routeEndpoints({ type: "LineString", coordinates: [42, 99] }), null);
+});
+
+test("routeEndpoints: distance exactly at the threshold counts as a loop (<=)", () => {
+  const a = [20.06, 49.12], b = [20.06, 49.1205];
+  const exact = haversineMeters(a, b); // ≈56 m — same float the implementation compares against
+  const g = line([a, [20.10, 49.15], b]);
+  assert.equal(routeEndpoints(g, { loopThresholdM: exact }).isLoop, true);
+  assert.equal(routeEndpoints(g, { loopThresholdM: exact - 0.001 }).isLoop, false);
 });

@@ -9,6 +9,7 @@ export function routeEndpoints(geometry, { loopThresholdM = 100 } = {}) {
   if (!geometry || geometry.type !== "LineString" || !Array.isArray(geometry.coordinates)) return null;
   const coords = geometry.coordinates;
   if (coords.length < 2) return null;
+  if (!Array.isArray(coords[0]) || !Array.isArray(coords[coords.length - 1])) return null;
   const start = coords[0];
   const end = coords[coords.length - 1];
   return { start, end, isLoop: haversineMeters(start, end) <= loopThresholdM };
