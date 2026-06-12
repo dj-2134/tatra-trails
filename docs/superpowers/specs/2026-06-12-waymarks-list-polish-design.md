@@ -34,9 +34,16 @@ Frontend + one DB migration. Builds on Increment E's flags and `js/route-endpoin
 
 ```sql
 alter table hikes    add column if not exists waymark_segments jsonb;
+alter table hikes    add column if not exists seasonal_extent_from jsonb;
+alter table hikes    add column if not exists seasonal_extent_to   jsonb;
 alter table closures add column if not exists extent_from jsonb;
 alter table closures add column if not exists extent_to   jsonb;
 ```
+
+**Why two homes for extents:** ad-hoc closures are `closures` rows, but the seasonal closure
+is a set of `seasonal_*` columns on the hike itself — so its extent lives on the hike
+(`seasonal_extent_from/to`). `computeStatus()` passes both through into `activeClosures`
+(the ad-hoc row spread carries them for free; the seasonal push adds them explicitly).
 
 - `hikes.waymark_segments`: ordered array; each element
   `{ "color": "red"|"blue"|"green"|"yellow"|"none", "style": "solid"|"dashed", "until": [lon,lat]? }`.
@@ -114,8 +121,10 @@ alter table closures add column if not exists extent_to   jsonb;
     has a remove ✕;
   - the preview re-renders **live** through the same `routeLayer()` so the admin sees
     exactly what the public map will show.
-- **Closure extents:** each closure row gains "Set extent" → arms a two-click mode
-  (from → to on the preview), then shows "extent ✓ / Clear". Optional per closure.
+- **Closure extents:** each ad-hoc closure row gains "Set extent" → arms a two-click mode
+  (from → to on the preview), then shows "extent ✓ / Clear". Optional per closure. The
+  seasonal-closure form block gets the same Set/Clear extent controls, stored on the hike
+  (`seasonal_extent_from/to`).
 - **Marking-mode transparency:** while either click-mode is armed, the route overlay is
   re-rendered with `dim: true` (~40% opacity) so the mapy.com base rendering underneath is
   visible for aiming; split/extent dots stay full-opacity; disarming restores normal.
